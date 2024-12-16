@@ -36,5 +36,6 @@ jobs:
         run: |
           echo "${{ secrets.DEV }}" > dev_secret.txt
           docker build --build-arg DEV_FILE=dev_secret.txt --tag ${{ env.REGISTRY }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }} .
+          docker push ${{ env.REGISTRY }}/${{ env.REPO_NAME }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
         env:
           DEV: ${{ secrets.DEV }}
