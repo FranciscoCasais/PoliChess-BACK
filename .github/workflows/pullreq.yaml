@@ -1,0 +1,27 @@
+name: CI al abrir pull request
+
+on:
+  pull_request:
+    branches:
+      - main
+      - qa
+      - dev
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v2
+      
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          check-latest: true
+      
+      - name: Instalar dependencias
+        run: npm i
+      
+      - name: Ejecutar pruebas
+        run: npm run test
