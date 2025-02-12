@@ -1,12 +1,11 @@
 import logger from 'jet-logger';
 
-import Env from '@src/common/Env';
-import server from './server';
+import app from './app';
+import entornoActual from './constants/current-env';
+
+import { traducirEntornoNode } from './misc/translate-env';
 
 
-// **** Run **** //
+const SERVER_START_MSG: string = "Servidor iniciado en modo de " + traducirEntornoNode(entornoActual.NodeEnv) + " en el puerto " + entornoActual.Port;
 
-const SERVER_START_MSG = ('Express server started on port: ' + 
-  Env.Port.toString());
-
-server.listen(Env.Port, () => logger.info(SERVER_START_MSG));
+app.listen(entornoActual.Port, () => logger.info(SERVER_START_MSG));
