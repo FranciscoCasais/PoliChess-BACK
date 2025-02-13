@@ -1,7 +1,8 @@
 
--- Asegurarse de que los comandos tengan efecto en el esquema "polichess"
+DROP DATABASE `polichess`;
+CREATE DATABASE IF NOT EXISTS `polichess`;
 USE `polichess`;
-
+SHOW TABLES FROM `polichess`;
 
 -- Asegurarse de que las restricciones de claves foráneas y unicidad se validen
 SELECT @@FOREIGN_KEY_CHECKS;
@@ -40,11 +41,11 @@ DELETE FROM `polichess`.`historial`;
 
 
 -- Inserciones
-INSERT INTO `polichess`.`usuario` (`id`, `nombre`, `contrasena_hash`) VALUES
-	(1, 'Sapo Peluquería', 'megatone1890');
+INSERT INTO `polichess`.`usuario` (`id`, `nombre`, `apellido`, `nombre_usuario`, `contrasena_hash`) VALUES
+	(1, 'Sapo', 'Peluquería', 'Sapo Peluquería', 'megatone1890');
 
-INSERT INTO `polichess`.`usuario` (`id`, `nombre`, `contrasena_hash`) VALUES
-	(2, 'Sapo Aquitectura', 'remeratermica00');
+INSERT INTO `polichess`.`usuario` (`id`, `nombre`, `apellido`, `nombre_usuario`, `contrasena_hash`) VALUES
+	(2, 'Sapo', 'Arquitectura', 'Sapo Aquitectura', 'remeratermica00');
 
 INSERT INTO `polichess`.`noticia` (`id`, `titulo`, `copete`, `autor_id`, `cuerpo`) VALUES
 	(1, 'Muere Sapo Arquitectura a los 135 años de edad',

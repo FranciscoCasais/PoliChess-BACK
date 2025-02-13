@@ -1,41 +1,51 @@
-import { Table, Model, Column, DataType, PrimaryKey, HasMany } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, PrimaryKey, HasMany, Unique } from 'sequelize-typescript';
+import { Comentario } from './comentario.model';
+import { Historial } from './historial.model';
+import { Noticia } from './noticia.model';
+import { Partida } from './partida.model';
+import { Torneo } from './torneo.model';
+import { Usuario_Torneo } from './usuario_torneo.model';
 
 @Table({
   tableName: "usuario",
-  timestamps: false
+  timestamps: false,
+  engine: "InnoDB"
 })
 export class Usuario extends Model<Usuario> {
   @PrimaryKey
   @Column({ type: DataType.INTEGER.UNSIGNED, autoIncrement: true })
   id!: number;
 
-  /* Por ahora comento al ser posible que una columna booleana "organizador" en Usuario_Torneo sea más conveniente
-  @HasMany(() => Torneo, { foreignKey: "organizador_id", as: "organizador_id" })
+  @HasMany(() => Torneo, { foreignKey: "organizador_id", as: "torneos" })
   torneos?: Torneo[];
-  */
 
-  /* Por ahora comento para que no dé error al no existir todavía los modelos necesarios
-  @HasMany(() => Partida, { foreignKey: "blancas_id", as: "blancas_id" })
+  @HasMany(() => Partida, { foreignKey: "blancas_id", as: "partidas_blancas" })
   partidas_blancas?: Partida[];
 
-  @HasMany(() => Partida, { foreignKey: "negras_id", as: "negras_id" })
+  @HasMany(() => Partida, { foreignKey: "negras_id", as: "partidas_negras" })
   partidas_negras?: Partida[];
 
-  @HasMany(() => Usuario_Torneo, { foreignKey: "usuario_id", as: "usuario_id" })
+  @HasMany(() => Usuario_Torneo, { foreignKey: "usuario_id", as: "usuario_torneos" })
   usuario_torneos?: Usuario_Torneo[];
 
-  @HasMany(() => Historial, { foreignKey: "usuario_id", as: "usuario_id" })
+  @HasMany(() => Historial, { foreignKey: "usuario_id", as: "historiales" })
   historiales?: Historial[];
 
-  @HasMany(() => Noticia, { foreignKey: "autor_id", as: "autor_id" })
+  @HasMany(() => Noticia, { foreignKey: "autor_id", as: "noticias" })
   noticias?: Noticia[];
 
-  @HasMany(() => Comentario, { foreignKey: "usuario_id", as: "usuario_id" })
+  @HasMany(() => Comentario, { foreignKey: "usuario_id", as: "comentarios" })
   comentarios?: Comentario[];
-  */
 
   @Column({ type: DataType.STRING(30), allowNull: false })
   nombre!: string;
+
+  @Column({ type: DataType.STRING(30), allowNull: false })
+  apellido!: string;
+
+  @Unique
+  @Column({ type: DataType.STRING(30), allowNull: false })
+  nombre_usuario!: string;
 
   @Column({ type: DataType.STRING(255), allowNull: false })
   contrasena_hash!: string;

@@ -13,6 +13,9 @@ import { HttpStatusCodes } from './constants/HttpStatusCodes';
 import { NodeEnvs } from './constants/NodeEnvs';
 import { RouteError } from './routes/common/RouteError';
 
+import sequelize from './config/db';
+import { prepararBD } from './config/db';
+
 
 const app: express.Application = express();
 
@@ -24,6 +27,8 @@ if (entornoActual.NodeEnv === NodeEnvs.DEV.valueOf()) {
 } else if (entornoActual.NodeEnv === NodeEnvs.PROD.valueOf()) {
   app.use(helmet());
 }
+
+prepararBD(sequelize);
 
 // app.use(rutas.base, routerBase);
 

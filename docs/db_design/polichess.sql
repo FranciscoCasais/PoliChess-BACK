@@ -15,9 +15,11 @@ USE `polichess`;
 CREATE TABLE IF NOT EXISTS `polichess`.`usuario` (
   `id` INT UNSIGNED AUTO_INCREMENT,
   `nombre` VARCHAR(30) NOT NULL,
+  `apellido` VARCHAR(30) NOT NULL,
+  `nombre_usuario` VARCHAR(30) NOT NULL UNIQUE,
   `contrasena_hash` VARCHAR(255) NOT NULL,
-  `administrador` TINYINT UNSIGNED NOT NULL DEFAULT 0 CHECK (`administrador` IN (0, 1)),
-  `foto_perfil` MEDIUMBLOB,
+  `administrador` BOOLEAN NOT NULL DEFAULT 0,
+  `foto_perfil` VARCHAR(22),
   `fecha_nacimiento` DATE,
   `elo_estandar` SMALLINT UNSIGNED NOT NULL DEFAULT 1200,
   `elo_rapido` SMALLINT UNSIGNED NOT NULL DEFAULT 1200,
@@ -187,11 +189,14 @@ CREATE TABLE IF NOT EXISTS `polichess`.`noticia` (
   `copete` VARCHAR(255) NOT NULL,
   `imagen` MEDIUMBLOB,
   `autor_id` INT UNSIGNED,
-  `publicado` DATETIME NOT NULL DEFAULT NOW(),
-  `editado` DATETIME ON UPDATE NOW(),
+  
+  -- Innecesarias gracias a los "timestamps" de Sequelize-TypeScript
+  -- `publicado` DATETIME NOT NULL DEFAULT NOW(),
+  -- `editado` DATETIME ON UPDATE NOW(),
+  
   `cuerpo` TEXT NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX `fk_autor_id_idx` (`autor_id` ASC) VISIBLE,
+  INDEX `fk_autor_id_idx` (`autor_id`),
   CONSTRAINT `fk_autor_id`
     FOREIGN KEY (`autor_id`)
     REFERENCES `polichess`.`usuario` (`id`)
@@ -208,8 +213,11 @@ CREATE TABLE IF NOT EXISTS `polichess`.`comentario` (
   `usuario_id` INT UNSIGNED,
   `noticia_id` INT UNSIGNED NOT NULL,
   `publicado` DATETIME NOT NULL DEFAULT NOW(),
-  `editado` DATETIME ON UPDATE NOW(),
-  `contenido` TEXT NOT NULL,
+  
+  -- Innecesarias gracias a los "timestamps" de Sequelize-TypeScript
+  -- `editado` DATETIME ON UPDATE NOW(),
+  -- `contenido` TEXT NOT NULL,
+  
   PRIMARY KEY (`id`),
   INDEX `fk_usuario_id_idx` (`usuario_id`),
   INDEX `fk_noticia_id_idx` (`noticia_id`),
