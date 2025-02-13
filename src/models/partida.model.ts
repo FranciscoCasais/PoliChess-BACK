@@ -1,5 +1,4 @@
 import { Table, Model, Column, DataType, PrimaryKey, ForeignKey, HasMany, BelongsTo } from 'sequelize-typescript';
-import { Historial } from './historial.model';
 import { Ronda } from './ronda.model';
 import { Usuario } from './usuario.model';
 
@@ -26,9 +25,6 @@ export class Partida extends Model<Partida> {
   @PrimaryKey
   @Column({ type: DataType.INTEGER.UNSIGNED, autoIncrement: true })
   id!: number;
-
-  @HasMany(() => Historial, { foreignKey: "partida_id", as: "historiales" })
-  historiales!: Historial[];
 
   @ForeignKey(() => Ronda)
   @Column({ type: DataType.INTEGER.UNSIGNED, allowNull: false, onDelete: "CASCADE", onUpdate: "CASCADE" })

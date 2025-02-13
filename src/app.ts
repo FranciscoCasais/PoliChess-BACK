@@ -5,6 +5,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import logger from 'jet-logger';
 import morgan from 'morgan';
+import path from 'path';
 
 dotenv.config({ path: `./env/.env.${ process.env.NODE_ENV || "development" }` });
 
@@ -31,6 +32,7 @@ if (entornoActual.NodeEnv === NodeEnvs.DEV.valueOf()) {
 prepararBD(sequelize);
 
 // app.use(rutas.base, routerBase);
+app.use("/imagenes", express.static(path.join(__dirname, "../public/uploads")))
 
 app.use((err: Error, _: Request, res: Response, next: NextFunction) => {
   if (entornoActual.NodeEnv !== NodeEnvs.TEST.valueOf()) {

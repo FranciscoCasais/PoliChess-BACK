@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, PrimaryKey, ForeignKey, BelongsTo, HasMany } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, PrimaryKey, ForeignKey, BelongsTo, HasMany, BeforeCreate, AfterCreate } from 'sequelize-typescript';
 import { Ronda } from './ronda.model';
 import { Usuario } from './usuario.model';
 import { Usuario_Torneo } from './usuario_torneo.model';
@@ -39,13 +39,19 @@ export class Torneo extends Model<Torneo> {
   descripcion?: string;
 
   @Column({ type: DataType.ENUM('Estándar', 'Rápido', 'Blitz'), allowNull: false })
-  modo_de_juego!: 'Estándar' | 'Rápido' | 'Blitz';
+  ritmo!: 'Estándar' | 'Rápido' | 'Blitz';
 
   @Column({ type: DataType.ENUM('Suizo', 'Todos contra todos', 'Todos contra todos (ida y vuelta)'), allowNull: false })
   sistema_emparejamiento!: 'Suizo' | 'Todos contra todos' | 'Todos contra todos (ida y vuelta)';
 
+  @Column({ type: DataType.TINYINT.UNSIGNED })
+  cantidad_rondas?: number;
+
   @Column({ type: DataType.ENUM('Buchholz', 'Buchholz mediano', 'Buchholz -1', 'Sonneborn-Berger'), allowNull: false })
   criterio_desempate!: 'Buchholz' | 'Buchholz mediano' | 'Buchholz -1' | 'Sonneborn-Berger';
+
+  @Column({ type: DataType.DATEONLY, allowNull: false })
+  fecha_inicio!: Date;
 
   @Column({ type: DataType.TINYINT.UNSIGNED, allowNull: false })
   intervalo_rondas!: number;

@@ -1,6 +1,5 @@
 import { Table, Model, Column, DataType, PrimaryKey, HasMany, Unique } from 'sequelize-typescript';
 import { Comentario } from './comentario.model';
-import { Historial } from './historial.model';
 import { Noticia } from './noticia.model';
 import { Partida } from './partida.model';
 import { Torneo } from './torneo.model';
@@ -27,9 +26,6 @@ export class Usuario extends Model<Usuario> {
 
   @HasMany(() => Usuario_Torneo, { foreignKey: "usuario_id", as: "usuario_torneos" })
   usuario_torneos?: Usuario_Torneo[];
-
-  @HasMany(() => Historial, { foreignKey: "usuario_id", as: "historiales" })
-  historiales?: Historial[];
 
   @HasMany(() => Noticia, { foreignKey: "autor_id", as: "noticias" })
   noticias?: Noticia[];
