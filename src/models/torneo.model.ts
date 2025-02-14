@@ -10,6 +10,11 @@ import { Usuario_Torneo } from './usuario_torneo.model';
     {
       name: "fk_organizador_id_idx",
       fields: ["organizador_id"]
+    },
+    {
+      name: "nombre_organizador_id",
+      fields: ["nombre", "organizador_id"],
+      unique: true
     }
   ],
   engine: "InnoDB"

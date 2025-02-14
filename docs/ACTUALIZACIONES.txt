@@ -1,12 +1,14 @@
-- Borrar el modelo de historial
-- Las actualizaciones de Elo solo se hacen cuando finaliza un torneo
-- Para cada partida que jugó en el torneo, se toma como referencia se toma el Elo que tenía al empezar el torneo
+Las actualizaciones de Elo solo se hacen cuando finaliza un torneo:
+
+- Para cada partida que jugó en el torneo, se toma como referencia el Elo que tenía al empezar el torneo (usuario_torneo.elo_inicial)
 - Se calcula cuánto ganó o perdió en esa partida, pero no se le suma al Elo inicial
-- Para la siguiente partida se vuelve a tomar como referencia el Elo que tenía al iniciar el torneo
+- Para la siguiente partida se calcula cuánto gabó o perdió de vuelta tomando como referencia el Elo que tenía al iniciar el torneo
 - Así con cada partida
 - Cuando se calculó cuánto ganó o perdió con cada partida (con el Elo del principio del torneo como referencia) se suman todas esas variaciones entre sí y recién ahí se le suma al Elo inical del torneo, que se convierte en el nuevo Elo del jugador
-- Agrear columna "elo_inicial" en la tabla "usuario_torneo"
-- Ahora en lugar de iniciar el torneo el administrador, se setea una fecha inicial, y si para esa fecha no se alcanzó el mínimo de jugadores el torneo se cancela
 
-- CAMBIAR POLICHESS.SQL Y EL SCRIPT DE PRUEBAS
+
+Ahora en lugar de iniciar el torneo el administrador, se setea una fecha inicial, y si para esa fecha no se alcanzó el mínimo de jugadores el torneo se cancela
+
 - CAMBIAR EL README DE PERMISOS DE USUARIOS
+
+- CUANDO SE ESTÉN GESTIONANDO LOS REPOS, CATCHEAR LOS ERRORES DE LOS UNIQUE INDEXES

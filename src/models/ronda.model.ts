@@ -11,11 +11,6 @@ import { Torneo } from './torneo.model';
       fields: ["torneo_id"]
     },
     {
-      name: "id_torneo_id",
-      fields: ["id", "torneo_id"],
-      unique: true
-    },
-    {
       name: "torneo_id_numero",
       fields: ["torneo_id", "numero"],
       unique: true

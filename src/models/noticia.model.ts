@@ -9,6 +9,11 @@ import { Usuario } from './usuario.model';
     {
       name: "fk_autor_id_idx",
       fields: ["autor_id"]
+    },
+    {
+      name: "titulo_autor_id",
+      fields: ["titulo", "autor_id"],
+      unique: true
     }
   ],
   engine: "InnoDB"

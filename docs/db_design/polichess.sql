@@ -60,9 +60,11 @@ CREATE TABLE IF NOT EXISTS `polichess`.`torneo` (
   `nombre` VARCHAR(45) NOT NULL,
   `organizador_id` INT UNSIGNED,
   `descripcion` VARCHAR(255),
-  `modo_de_juego` ENUM('Estándar', 'Rápido', 'Blitz') NOT NULL,
+  `ritmo` ENUM('Estándar', 'Rápido', 'Blitz') NOT NULL,
   `sistema_emparejamiento` ENUM('Suizo', 'Todos contra todos', 'Todos contra todos (ida y vuelta)') NOT NULL,
+  `cantidad_rondas` TINYINT UNSIGNED,
   `criterio_desempate` ENUM('Buchholz', 'Buchholz mediano', 'Buchholz -1', 'Sonneborn-Berger') NOT NULL,
+  `fecha_inicio` DATE NOT NULL,
   `intervalo_rondas` TINYINT UNSIGNED NOT NULL,
   `horario_preferido` TIME NOT NULL,
   `minimo_jugadores` TINYINT UNSIGNED NOT NULL,
@@ -71,6 +73,7 @@ CREATE TABLE IF NOT EXISTS `polichess`.`torneo` (
   `maximo_elo` SMALLINT UNSIGNED NOT NULL,
   `estado` ENUM('Pendiente', 'En curso', 'Finalizado', 'Cancelado') NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE INDEX `nombre_organizador_id` (`nombre`, `organizador_id`),
   INDEX `fk_organizador_id_idx` (`organizador_id`),
   CONSTRAINT `fk_organizador_id`
     FOREIGN KEY (`organizador_id`)
@@ -88,7 +91,11 @@ CREATE TABLE IF NOT EXISTS `polichess`.`ronda` (
   `torneo_id` INT UNSIGNED NOT NULL,
   `numero` TINYINT UNSIGNED NOT NULL,
   `fecha_hora` DATETIME NOT NULL,
-  PRIMARY KEY (`id`, `torneo_id`),
+
+  -- Debería ser clave primaria compuesta, pero Sequelize-TypeScript no lo permite
+  -- PRIMARY KEY (`id`, `torneo_id`),
+
+  PRIMARY KEY (`id`),
   UNIQUE INDEX `torneo_id_numero` (`torneo_id`, `numero`),
   INDEX `fk_torneo_id_idx` (`torneo_id`),
   CONSTRAINT `fk_torneo_id`
@@ -108,6 +115,10 @@ CREATE TABLE IF NOT EXISTS `polichess`.`partida` (
   `blancas_id` INT UNSIGNED,
   `negras_id` INT UNSIGNED,
   `resultado` ENUM('Blancas', 'Negras', 'Tablas', 'Cancelado'),
+
+  -- Debería ser clave primaria compuesta, pero Sequelize-TypeScript no lo permite
+  -- PRIMARY KEY (`id`, `ronda_id`),
+
   PRIMARY KEY (`id`),
   INDEX `fk_ronda_id_idx` (`ronda_id`),
   INDEX `fk_blancas_id_idx` (`blancas_id`),
@@ -137,10 +148,12 @@ CREATE TABLE IF NOT EXISTS `polichess`.`usuario_torneo` (
   `id` INT UNSIGNED AUTO_INCREMENT,
   `usuario_id` INT UNSIGNED,
   `torneo_id` INT UNSIGNED NOT NULL,
+  `elo_inicial` SMALLINT UNSIGNED NOT NULL,
   `estado_usuario` ENUM('Activo', 'Vetado', 'Eliminado') NOT NULL,
   `puntaje` TINYINT UNSIGNED NULL,
   `posicion` TINYINT UNSIGNED NULL,
   PRIMARY KEY (`id`),
+  UNIQUE INDEX `usuario_id_torneo_id` (`usuario_id`, `torneo_id`),
   INDEX `fk_usuario_id_idx2` (`usuario_id`),
   INDEX `fk_torneo_id_idx2` (`torneo_id`),
   CONSTRAINT `fk_usuario_id2`
@@ -151,30 +164,6 @@ CREATE TABLE IF NOT EXISTS `polichess`.`usuario_torneo` (
   CONSTRAINT `fk_torneo_id2`
     FOREIGN KEY (`torneo_id`)
     REFERENCES `polichess`.`torneo` (`id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `polichess`.`historial`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `polichess`.`historial` (
-  `id` INT UNSIGNED AUTO_INCREMENT,
-  `usuario_id` INT UNSIGNED NOT NULL,
-  `partida_id` INT UNSIGNED NOT NULL,
-  `elo_anterior` SMALLINT UNSIGNED NOT NULL,
-  PRIMARY KEY (`id`, `usuario_id`, `partida_id`),
-  INDEX `fk_partida_id_idx` (`partida_id`),
-  INDEX `fk_usuario_id_idx3` (`usuario_id`),
-  CONSTRAINT `fk_usuario_id3`
-    FOREIGN KEY (`usuario_id`)
-    REFERENCES `polichess`.`usuario` (`id`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  CONSTRAINT `fk_partida_id`
-    FOREIGN KEY (`partida_id`)
-    REFERENCES `polichess`.`partida` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE)
 ENGINE = InnoDB;
@@ -196,6 +185,7 @@ CREATE TABLE IF NOT EXISTS `polichess`.`noticia` (
   
   `cuerpo` TEXT NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE INDEX `titulo_autor_id` (`titulo`, `autor_id`),
   INDEX `fk_autor_id_idx` (`autor_id`),
   CONSTRAINT `fk_autor_id`
     FOREIGN KEY (`autor_id`)
@@ -212,11 +202,12 @@ CREATE TABLE IF NOT EXISTS `polichess`.`comentario` (
   `id` INT UNSIGNED AUTO_INCREMENT,
   `usuario_id` INT UNSIGNED,
   `noticia_id` INT UNSIGNED NOT NULL,
-  `publicado` DATETIME NOT NULL DEFAULT NOW(),
   
   -- Innecesarias gracias a los "timestamps" de Sequelize-TypeScript
+  -- `publicado` DATETIME NOT NULL DEFAULT NOW(),
   -- `editado` DATETIME ON UPDATE NOW(),
-  -- `contenido` TEXT NOT NULL,
+  
+  `contenido` TEXT NOT NULL,
   
   PRIMARY KEY (`id`),
   INDEX `fk_usuario_id_idx` (`usuario_id`),

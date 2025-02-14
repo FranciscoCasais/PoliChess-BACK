@@ -4,6 +4,7 @@ CREATE DATABASE IF NOT EXISTS `polichess`;
 USE `polichess`;
 SHOW TABLES FROM `polichess`;
 
+
 -- Asegurarse de que las restricciones de claves foráneas y unicidad se validen
 SELECT @@FOREIGN_KEY_CHECKS;
 SET FOREIGN_KEY_CHECKS = 1;
@@ -20,24 +21,22 @@ AND COLUMN_NAME IN ('usuario_id', 'organizador_id', 'blancas_id', 'negras_id');
 
 -- Obtener filas
 SELECT * FROM `polichess`.`usuario`;
-SELECT * FROM `polichess`.`noticia`;
-SELECT * FROM `polichess`.`comentario`;
 SELECT * FROM `polichess`.`torneo`;
-SELECT * FROM `polichess`.`usuario_torneo`;
 SELECT * FROM `polichess`.`ronda`;
 SELECT * FROM `polichess`.`partida`;
-SELECT * FROM `polichess`.`historial`;
+SELECT * FROM `polichess`.`usuario_torneo`;
+SELECT * FROM `polichess`.`noticia`;
+SELECT * FROM `polichess`.`comentario`;
 
 
 -- Limpiar tablas
 DELETE FROM `polichess`.`usuario`;
-DELETE FROM `polichess`.`noticia`;
-DELETE FROM `polichess`.`comentario`;
 DELETE FROM `polichess`.`torneo`;
-DELETE FROM `polichess`.`usuario_torneo`;
 DELETE FROM `polichess`.`ronda`;
 DELETE FROM `polichess`.`partida`;
-DELETE FROM `polichess`.`historial`;
+DELETE FROM `polichess`.`usuario_torneo`;
+DELETE FROM `polichess`.`noticia`;
+DELETE FROM `polichess`.`comentario`;
 
 
 -- Inserciones
@@ -47,22 +46,14 @@ INSERT INTO `polichess`.`usuario` (`id`, `nombre`, `apellido`, `nombre_usuario`,
 INSERT INTO `polichess`.`usuario` (`id`, `nombre`, `apellido`, `nombre_usuario`, `contrasena_hash`) VALUES
 	(2, 'Sapo', 'Arquitectura', 'Sapo Aquitectura', 'remeratermica00');
 
-INSERT INTO `polichess`.`noticia` (`id`, `titulo`, `copete`, `autor_id`, `cuerpo`) VALUES
-	(1, 'Muere Sapo Arquitectura a los 135 años de edad',
-    'El hombre que supo ser el mejor jugador del Arquitectura murió el sábado pasado de hipotermia por olvidar ponerse su remera térmica',
-    1,
-    'Párrafo 1\nPárrafo 2\nPárrafo 3');
-
-INSERT INTO `polichess`.`comentario` (`id`, `usuario_id`, `noticia_id`, `contenido`) VALUES
-	(1, 1, 1, 'BUENA PELU');
-
 INSERT INTO `polichess`.`torneo`
 	(`id`,
     `nombre`,
 	`organizador_id`,
-	`modo_de_juego`,
+	`ritmo`,
     `sistema_emparejamiento`,
     `criterio_desempate`,
+    `fecha_inicio`,
     `intervalo_rondas`,
     `horario_preferido`,
     `minimo_jugadores`,
@@ -76,6 +67,7 @@ INSERT INTO `polichess`.`torneo`
     'Estándar',
     'Todos contra todos (ida y vuelta)',
     'Buchholz',
+    '2025-2-24',
     7,
     '12:15:00',
     5,
@@ -83,12 +75,6 @@ INSERT INTO `polichess`.`torneo`
     1000,
     0,
     'Pendiente');
-
-INSERT INTO `polichess`.`usuario_torneo` (`id`, `usuario_id`, `torneo_id`, `estado_usuario`) VALUES
-	(1, 1, 1, 'Activo');
-
-INSERT INTO `polichess`.`usuario_torneo` (`id`, `usuario_id`, `torneo_id`, `estado_usuario`) VALUES
-	(2, 2, 1, 'Activo');
 
 INSERT INTO `polichess`.`ronda` (`id`, `torneo_id`, `numero`, `fecha_hora`) VALUES
 	(1,
@@ -98,9 +84,18 @@ INSERT INTO `polichess`.`ronda` (`id`, `torneo_id`, `numero`, `fecha_hora`) VALU
 
 INSERT INTO `polichess`.`partida` (`id`, `ronda_id`, `blancas_id`, `negras_id`) VALUES
 	(1, 1, 1, 2);
-
-INSERT INTO `polichess`.`historial` (`id`, `usuario_id`, `partida_id`, `elo_anterior`) VALUES
-	(1, 1, 1, 1200);
     
-INSERT INTO `polichess`.`historial` (`id`, `usuario_id`, `partida_id`, `elo_anterior`) VALUES
-	(2, 2, 1, 1200);
+INSERT INTO `polichess`.`usuario_torneo` (`id`, `usuario_id`, `torneo_id`, `elo_inicial`, `estado_usuario`) VALUES
+	(1, 1, 1, 1200, 'Activo');
+
+INSERT INTO `polichess`.`usuario_torneo` (`id`, `usuario_id`, `torneo_id`, `elo_inicial`, `estado_usuario`) VALUES
+	(2, 2, 1, 1200, 'Activo');
+
+INSERT INTO `polichess`.`noticia` (`id`, `titulo`, `copete`, `autor_id`, `cuerpo`) VALUES
+	(1, 'Muere Sapo Arquitectura a los 135 años de edad',
+    'El hombre que supo ser el mejor jugador del Arquitectura murió el sábado pasado de hipotermia por olvidar ponerse su remera térmica',
+    1,
+    'Párrafo 1\nPárrafo 2\nPárrafo 3');
+
+INSERT INTO `polichess`.`comentario` (`id`, `usuario_id`, `noticia_id`, `contenido`) VALUES
+	(1, 1, 1, 'BUENA PELU');
