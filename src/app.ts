@@ -7,7 +7,7 @@ import logger from 'jet-logger';
 import morgan from 'morgan';
 import path from 'path';
 
-dotenv.config({ path: `./env/.env.${ process.env.NODE_ENV || "development" }` });
+dotenv.config({ path: `./env/.env.${process.env.NODE_ENV || "development"}` });
 
 import entornoActual from './constants/current-env';
 import { HttpStatusCodes } from './constants/HttpStatusCodes';

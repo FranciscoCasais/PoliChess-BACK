@@ -14,12 +14,12 @@ USE `polichess`;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `polichess`.`usuario` (
   `id` INT UNSIGNED AUTO_INCREMENT,
-  `nombre` VARCHAR(30) NOT NULL,
-  `apellido` VARCHAR(30) NOT NULL,
-  `nombre_usuario` VARCHAR(30) NOT NULL UNIQUE,
-  `contrasena_hash` VARCHAR(255) NOT NULL,
+  `nombre` VARCHAR(30) NOT NULL CHECK (CHAR_LENGTH(`nombre`) > 0),
+  `apellido` VARCHAR(30) NOT NULL CHECK (CHAR_LENGTH(`apellido`) > 0),
+  `nombre_usuario` VARCHAR(30) NOT NULL UNIQUE CHECK (CHAR_LENGTH(`nombre_usuario`) > 0),
+  `contrasena_hash` VARCHAR(255) NOT NULL CHECK (CHAR_LENGTH(`contrasena_hash`) > 0),
   `administrador` BOOLEAN NOT NULL DEFAULT 0,
-  `foto_perfil` VARCHAR(22),
+  `foto_perfil` VARCHAR(22) CHECK (CHAR_LENGTH(`foto_perfil`) > 0),
   `fecha_nacimiento` DATE,
   `elo_estandar` SMALLINT UNSIGNED NOT NULL DEFAULT 1200,
   `elo_rapido` SMALLINT UNSIGNED NOT NULL DEFAULT 1200,
@@ -57,12 +57,12 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `polichess`.`torneo` (
   `id` INT UNSIGNED AUTO_INCREMENT,
-  `nombre` VARCHAR(45) NOT NULL,
+  `nombre` VARCHAR(45) NOT NULL CHECK (CHAR_LENGTH(`nombre`) > 0),
   `organizador_id` INT UNSIGNED,
   `descripcion` VARCHAR(255),
   `ritmo` ENUM('Estándar', 'Rápido', 'Blitz') NOT NULL,
   `sistema_emparejamiento` ENUM('Suizo', 'Todos contra todos', 'Todos contra todos (ida y vuelta)') NOT NULL,
-  `cantidad_rondas` TINYINT UNSIGNED,
+  `cantidad_rondas` TINYINT UNSIGNED DEFAULT NULL,
   `criterio_desempate` ENUM('Buchholz', 'Buchholz mediano', 'Buchholz -1', 'Sonneborn-Berger') NOT NULL,
   `fecha_inicio` DATE NOT NULL,
   `intervalo_rondas` TINYINT UNSIGNED NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS `polichess`.`torneo` (
   `maximo_jugadores` TINYINT UNSIGNED NOT NULL,
   `minimo_elo` SMALLINT UNSIGNED NOT NULL,
   `maximo_elo` SMALLINT UNSIGNED NOT NULL,
-  `estado` ENUM('Pendiente', 'En curso', 'Finalizado', 'Cancelado') NOT NULL,
+  `estado` ENUM('Pendiente', 'En curso', 'Finalizado', 'Cancelado') NOT NULL DEFAULT 'Pendiente',
   PRIMARY KEY (`id`),
   UNIQUE INDEX `nombre_organizador_id` (`nombre`, `organizador_id`),
   INDEX `fk_organizador_id_idx` (`organizador_id`),
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS `polichess`.`partida` (
   `ronda_id` INT UNSIGNED NOT NULL,
   `blancas_id` INT UNSIGNED,
   `negras_id` INT UNSIGNED,
-  `resultado` ENUM('Blancas', 'Negras', 'Tablas', 'Cancelado'),
+  `resultado` ENUM('Blancas', 'Negras', 'Tablas', 'Cancelado') DEFAULT NULL,
 
   -- Debería ser clave primaria compuesta, pero Sequelize-TypeScript no lo permite
   -- PRIMARY KEY (`id`, `ronda_id`),
@@ -149,9 +149,9 @@ CREATE TABLE IF NOT EXISTS `polichess`.`usuario_torneo` (
   `usuario_id` INT UNSIGNED,
   `torneo_id` INT UNSIGNED NOT NULL,
   `elo_inicial` SMALLINT UNSIGNED NOT NULL,
-  `estado_usuario` ENUM('Activo', 'Vetado', 'Eliminado') NOT NULL,
-  `puntaje` TINYINT UNSIGNED NULL,
-  `posicion` TINYINT UNSIGNED NULL,
+  `expulsado` BOOLEAN NOT NULL DEFAULT 0,
+  `puntaje` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `posicion` TINYINT UNSIGNED NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `usuario_id_torneo_id` (`usuario_id`, `torneo_id`),
   INDEX `fk_usuario_id_idx2` (`usuario_id`),
@@ -174,16 +174,16 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `polichess`.`noticia` (
   `id` INT UNSIGNED AUTO_INCREMENT,
-  `titulo` VARCHAR(150) NOT NULL,
-  `copete` VARCHAR(255) NOT NULL,
-  `imagen` MEDIUMBLOB,
+  `titulo` VARCHAR(150) NOT NULL CHECK (CHAR_LENGTH(`titulo`) > 0),
+  `copete` VARCHAR(255) NOT NULL CHECK (CHAR_LENGTH(`copete`) > 0),
+  `imagen` VARCHAR(22) CHECK (CHAR_LENGTH(`imagen`) > 0),
   `autor_id` INT UNSIGNED,
   
   -- Innecesarias gracias a los "timestamps" de Sequelize-TypeScript
   -- `publicado` DATETIME NOT NULL DEFAULT NOW(),
   -- `editado` DATETIME ON UPDATE NOW(),
   
-  `cuerpo` TEXT NOT NULL,
+  `cuerpo` TEXT NOT NULL CHECK (CHAR_LENGTH(`cuerpo`) > 0),
   PRIMARY KEY (`id`),
   UNIQUE INDEX `titulo_autor_id` (`titulo`, `autor_id`),
   INDEX `fk_autor_id_idx` (`autor_id`),
@@ -207,7 +207,7 @@ CREATE TABLE IF NOT EXISTS `polichess`.`comentario` (
   -- `publicado` DATETIME NOT NULL DEFAULT NOW(),
   -- `editado` DATETIME ON UPDATE NOW(),
   
-  `contenido` TEXT NOT NULL,
+  `contenido` TEXT NOT NULL CHECK (CHAR_LENGTH(`contenido`) > 0),
   
   PRIMARY KEY (`id`),
   INDEX `fk_usuario_id_idx` (`usuario_id`),

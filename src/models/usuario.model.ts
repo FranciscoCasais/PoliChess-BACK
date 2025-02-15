@@ -33,23 +33,23 @@ export class Usuario extends Model<Usuario> {
   @HasMany(() => Comentario, { foreignKey: "usuario_id", as: "comentarios" })
   comentarios?: Comentario[];
 
-  @Column({ type: DataType.STRING(30), allowNull: false })
+  @Column({ type: DataType.STRING(30), allowNull: false, validate: { notEmpty: true }})
   nombre!: string;
 
-  @Column({ type: DataType.STRING(30), allowNull: false })
+  @Column({ type: DataType.STRING(30), allowNull: false, validate: { notEmpty: true }})
   apellido!: string;
 
   @Unique
-  @Column({ type: DataType.STRING(30), allowNull: false })
+  @Column({ type: DataType.STRING(30), allowNull: false, validate: { notEmpty: true }})
   nombre_usuario!: string;
 
-  @Column({ type: DataType.STRING(255), allowNull: false })
+  @Column({ type: DataType.STRING(255), allowNull: false, validate: { notEmpty: true }})
   contrasena_hash!: string;
 
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: 0})
   administrador!: boolean;
 
-  @Column({ type: DataType.STRING(22) })
+  @Column({ type: DataType.STRING(22), validate: { notEmpty: true }})
   foto_perfil?: string;
 
   @Column({ type: DataType.DATEONLY })

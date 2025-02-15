@@ -85,11 +85,11 @@ INSERT INTO `polichess`.`ronda` (`id`, `torneo_id`, `numero`, `fecha_hora`) VALU
 INSERT INTO `polichess`.`partida` (`id`, `ronda_id`, `blancas_id`, `negras_id`) VALUES
 	(1, 1, 1, 2);
     
-INSERT INTO `polichess`.`usuario_torneo` (`id`, `usuario_id`, `torneo_id`, `elo_inicial`, `estado_usuario`) VALUES
-	(1, 1, 1, 1200, 'Activo');
+INSERT INTO `polichess`.`usuario_torneo` (`id`, `usuario_id`, `torneo_id`, `elo_inicial`) VALUES
+	(1, 1, 1, 1200);
 
-INSERT INTO `polichess`.`usuario_torneo` (`id`, `usuario_id`, `torneo_id`, `elo_inicial`, `estado_usuario`) VALUES
-	(2, 2, 1, 1200, 'Activo');
+INSERT INTO `polichess`.`usuario_torneo` (`id`, `usuario_id`, `torneo_id`, `elo_inicial`) VALUES
+	(2, 2, 1, 1200);
 
 INSERT INTO `polichess`.`noticia` (`id`, `titulo`, `copete`, `autor_id`, `cuerpo`) VALUES
 	(1, 'Muere Sapo Arquitectura a los 135 años de edad',

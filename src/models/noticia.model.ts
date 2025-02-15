@@ -26,10 +26,10 @@ export class Noticia extends Model<Noticia> {
   @HasMany(() => Comentario, { foreignKey: "noticia_id", as: "comentarios" })
   comentarios?: Comentario[];
 
-  @Column({ type: DataType.STRING(150), allowNull: false })
+  @Column({ type: DataType.STRING(150), allowNull: false, validate: { notEmpty: true }})
   titulo!: string;
 
-  @Column({ type: DataType.STRING(255), allowNull: false })
+  @Column({ type: DataType.STRING(255), allowNull: false, validate: { notEmpty: true }})
   copete!: string;
 
   @Column({ type: DataType.BLOB('medium') })
@@ -50,6 +50,6 @@ export class Noticia extends Model<Noticia> {
   editado?: Date;
   */
 
-  @Column({ type: DataType.TEXT, allowNull: false })
+  @Column({ type: DataType.TEXT, allowNull: false, validate: { notEmpty: true }})
   cuerpo!: string;
 }

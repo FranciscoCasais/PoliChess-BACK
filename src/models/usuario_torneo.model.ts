@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, PrimaryKey, ForeignKey, BelongsTo, BeforeCreate } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, PrimaryKey, ForeignKey, BelongsTo, BeforeCreate, BeforeUpdate, AfterUpdate } from 'sequelize-typescript';
 import { Usuario } from './usuario.model';
 import { Torneo } from './torneo.model';
 
@@ -44,43 +44,81 @@ export class Usuario_Torneo extends Model<Usuario_Torneo> {
   @Column({ type: DataType.SMALLINT.UNSIGNED, allowNull: false })
   elo_inicial!: number;
 
-  @Column({ type: DataType.ENUM('Activo', 'Vetado', 'Eliminado'), allowNull: false })
-  estado_usuario!: 'Activo' | 'Vetado' | 'Eliminado';
+  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: 0 })
+  expulsado!: boolean;
 
-  @Column({ type: DataType.TINYINT.UNSIGNED, allowNull: true })
+  @Column({ type: DataType.TINYINT.UNSIGNED, allowNull: false, defaultValue: 0 })
   puntaje?: number;
 
-  @Column({ type: DataType.TINYINT.UNSIGNED, allowNull: true })
+  @Column({ type: DataType.TINYINT.UNSIGNED, allowNull: false, defaultValue: 0 })
   posicion?: number;
 
-  @BeforeCreate
-  static async validarInscripcion(inscripcion: Usuario_Torneo) {
-    const ROOT_MSG: string = "No se pudo inscribir al usuario: ";
-    const usuario: Usuario | null = await Usuario.findByPk(inscripcion.usuario_id);
+  public validarCantidadInscripciones(torneo: Torneo): boolean {
+    const cantidadInscritos: number = torneo.usuario_torneos?.length ?? 0;
+    return !(cantidadInscritos === torneo.maximo_jugadores);
+  }
+
+  public async validar(): Promise<void> {
+    const BASE_MSG: string = "No se pudo inscribir al usuario: ";
     
-    if (!usuario) throw new Error(ROOT_MSG + "Usuario no encontrado");
+    const torneo: Torneo | null = await Torneo.findByPk(this.torneo_id,
+      {
+        include: {
+          model: Usuario_Torneo,
+          where: { expulsado: false }
+        }
+      });
 
-    const torneo: Torneo | null = await Torneo.findByPk(inscripcion.torneo_id, { include: Usuario_Torneo });
-
-    if (!torneo) throw new Error(ROOT_MSG + "Torneo no encontrado");
-
-    let elo: number;
-
-    switch(torneo!.ritmo) {
-      case "Estándar":
-        elo = usuario!.elo_estandar;
-      break;
-      case "Rápido":
-        elo = usuario!.elo_rapido;
-      break;
-      case "Blitz":
-        elo = usuario!.elo_blitz;
-      break;
+    if (!torneo) {
+      throw new Error(BASE_MSG + "Torneo no encontrado");
+    }
+    
+    if (torneo.estado !== 'Pendiente') {
+      throw new Error(BASE_MSG + "El torneo ya empezó o ya finalizó");
+    }
+    
+    if (this.elo_inicial < torneo.minimo_elo || this.elo_inicial > torneo.maximo_elo) {
+      throw new Error(BASE_MSG + "El usuario no cumple con los requisitos de Elo para este torneo");
     }
 
-    const cantidadInscriptos: number = torneo!.usuario_torneos?.length || 0;
-
-    if (cantidadInscriptos === torneo.maximo_jugadores) throw new Error("El torneo ya alcanzó el máximo de jugadores inscriptos");
-    if (elo < torneo!.maximo_elo || elo > torneo!.maximo_elo) throw new Error("El usuario no cumple con los requisitos de Elo de este torneo")
+    if (!this.validarCantidadInscripciones(torneo)) {
+      throw new Error(BASE_MSG + "El torneo ya tiene la cantidad máxima de jugadores inscritos");
+    }
   }
+
+  @BeforeCreate
+  static async validarInscripcion(inscripcion: Usuario_Torneo): Promise<void> {
+    inscripcion.validar();
+  }
+
+  @BeforeUpdate
+  static async validarActualizacion(inscripcion: Usuario_Torneo, options: any): Promise<void> {
+    const BASE_MSG: string = "No se pudo actualizar el registro: ";
+
+    const torneo: Torneo | null = await Torneo.findByPk(inscripcion.torneo_id);
+
+    if (!torneo) {
+      throw new Error(BASE_MSG + "Torneo no encontrado");
+    }
+
+    if (options.fields.includes("expulsado") && torneo.estado === 'Finalizado') {
+      throw new Error(BASE_MSG + "No se puede expulsar a un jugador de un torneo finalizado");
+    }
+    
+    if ((options.fields.includes("puntaje") || options.fields.includes("posicion")) &&
+       (torneo.estado === 'Pendiente' || torneo.estado === 'Finalizado')) {
+      throw new Error(BASE_MSG + "El torneo todavía no empezó o ya finalizó");
+    }
+  }
+
+  // En realidad no debería eliminarse el registro al expulsar a un jugador, incluso si el torneo está
+  // en estado "Pendiente".
+
+  // Se podrá actualizar el campo "expulsado", pero no se eliminará el registro para mantener constancia
+  // de quiénes pueden inscribirse y quiénes no. Solo se elimina el registro si el usuario que se
+  // inscribió se da de baja por su propia cuenta.
+
+  // Así, ese usuario puede volver a inscribirse si quiere, pero si es expulsado el registro de la expulsión
+  // seguirá disponible y su ID impedirá que se inscriba nuevamente gracias a la restricción de unicidad.
+
 }

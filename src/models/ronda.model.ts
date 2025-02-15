@@ -1,5 +1,6 @@
-import { Table, Model, Column, DataType, PrimaryKey, ForeignKey, HasMany, BelongsTo } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, PrimaryKey, ForeignKey, HasMany, BelongsTo, BeforeCreate } from 'sequelize-typescript';
 import { Partida } from './partida.model';
+import { sumarDias } from '../misc/add-days';
 import { Torneo } from './torneo.model';
 
 @Table({
@@ -38,4 +39,34 @@ export class Ronda extends Model<Ronda> {
 
   @Column({ type: DataType.DATE, allowNull: false })
   fecha_hora!: Date;
+
+  public async validar(): Promise<void> {
+    const BASE_MSG: string = "No se pudo crear la ronda: ";
+    const torneo: Torneo | null = await Torneo.findByPk(this.torneo_id);
+
+    if (!torneo) {
+      throw new Error(BASE_MSG + "Torneo no encontrado");
+    }
+
+    if (torneo.estado !== 'En curso') {
+      throw new Error(BASE_MSG + "No se puede ingresar la ronda durante este estado del torneo");
+    }
+    
+    if (this.numero > torneo.cantidad_rondas!) {
+      throw new Error(BASE_MSG + "El número de ronda no puede ser mayor a la cantidad de rondas del torneo");
+    }
+
+    if (this.numero < 1) {
+      throw new Error(BASE_MSG + "El número de ronda no puede ser menor a 1");
+    }
+
+    // La fecha y hora ya son validadas en la creación automática de las rondas
+    // cuando un torneo pasa de estado "Pendiente" a "En curso"
+
+  }
+
+  @BeforeCreate
+  static async validarRonda(ronda: Ronda) {
+    ronda.validar();
+  }
 }
