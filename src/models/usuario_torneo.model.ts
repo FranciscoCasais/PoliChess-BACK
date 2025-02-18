@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, PrimaryKey, ForeignKey, BelongsTo, BeforeCreate, BeforeUpdate, AfterUpdate } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, PrimaryKey, ForeignKey, BelongsTo } from 'sequelize-typescript';
 import { Usuario } from './usuario.model';
 import { Torneo } from './torneo.model';
 
@@ -28,11 +28,11 @@ export class Usuario_Torneo extends Model<Usuario_Torneo> {
   id!: number;
 
   @ForeignKey(() => Usuario)
-  @Column({ type: DataType.INTEGER.UNSIGNED, onDelete: "SET NULL", onUpdate: "CASCADE" })
-  usuario_id?: number;
+  @Column({ type: DataType.INTEGER.UNSIGNED, onDelete: "CASCADE", onUpdate: "CASCADE" })
+  usuario_id?: number | null;
 
   @BelongsTo(() => Usuario)
-  usuario?: Usuario;
+  usuario?: Usuario | null;
 
   @ForeignKey(() => Torneo)
   @Column({ type: DataType.INTEGER.UNSIGNED, allowNull: false, onDelete: "CASCADE", onUpdate: "CASCADE" })
@@ -44,81 +44,97 @@ export class Usuario_Torneo extends Model<Usuario_Torneo> {
   @Column({ type: DataType.SMALLINT.UNSIGNED, allowNull: false })
   elo_inicial!: number;
 
-  @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: 0 })
-  expulsado!: boolean;
 
-  @Column({ type: DataType.TINYINT.UNSIGNED, allowNull: false, defaultValue: 0 })
-  puntaje?: number;
+  /*
+  ------------------------------------------------------------------------------------------------
 
-  @Column({ type: DataType.TINYINT.UNSIGNED, allowNull: false, defaultValue: 0 })
-  posicion?: number;
+  CREATE
 
-  public validarCantidadInscripciones(torneo: Torneo): boolean {
-    const cantidadInscritos: number = torneo.usuario_torneos?.length ?? 0;
-    return !(cantidadInscritos === torneo.maximo_jugadores);
-  }
+  1. Antes de insertar, se necesita el token JWT para comprobar que:
+  - El usuario esté logueado
+  - El ID del usuario sea el mismo que el ID del usuario en el token
 
-  public async validar(): Promise<void> {
-    const BASE_MSG: string = "No se pudo inscribir al usuario: ";
-    
-    const torneo: Torneo | null = await Torneo.findByPk(this.torneo_id,
-      {
-        include: {
-          model: Usuario_Torneo,
-          where: { expulsado: false }
-        }
-      });
+  2. Antes de insertar, en el hook @BeforeCreate, se necesita comprobar que:
+  - El torneo exista
+  - El torneo esté en estado "Pendiente"
+  - Haya cupo en el torneo
+  - El usuario cumpla con los requisitos de mínimo y máximo de Elo
 
-    if (!torneo) {
-      throw new Error(BASE_MSG + "Torneo no encontrado");
-    }
-    
-    if (torneo.estado !== 'Pendiente') {
-      throw new Error(BASE_MSG + "El torneo ya empezó o ya finalizó");
-    }
-    
-    if (this.elo_inicial < torneo.minimo_elo || this.elo_inicial > torneo.maximo_elo) {
-      throw new Error(BASE_MSG + "El usuario no cumple con los requisitos de Elo para este torneo");
-    }
+  3. Luego, se intentan insertar estos campos en la consulta de Sequelize:
+  - ID del usuario
+  - ID del torneo
+  - Elo inicial: Se define siempre en la consulta de Sequelize a partir del campo del Elo
+    correspondiente obtenido a partir del registro con el ID que le llega a la consulta
+  
+  Campos que NUNCA se intentan insertar en la consulta de Sequelize (obviando el ID y claves
+  foráneas):
+  - Expulsado: adopta false
+  - Puntaje: adopta 0
+  - Posición: adopta 0
 
-    if (!this.validarCantidadInscripciones(torneo)) {
-      throw new Error(BASE_MSG + "El torneo ya tiene la cantidad máxima de jugadores inscritos");
-    }
-  }
+  ------------------------------------------------------------------------------------------------
+  */
 
-  @BeforeCreate
-  static async validarInscripcion(inscripcion: Usuario_Torneo): Promise<void> {
-    inscripcion.validar();
-  }
 
-  @BeforeUpdate
-  static async validarActualizacion(inscripcion: Usuario_Torneo, options: any): Promise<void> {
-    const BASE_MSG: string = "No se pudo actualizar el registro: ";
 
-    const torneo: Torneo | null = await Torneo.findByPk(inscripcion.torneo_id);
+  /*
+  ------------------------------------------------------------------------------------------------
 
-    if (!torneo) {
-      throw new Error(BASE_MSG + "Torneo no encontrado");
-    }
+  UPDATE
 
-    if (options.fields.includes("expulsado") && torneo.estado === 'Finalizado') {
-      throw new Error(BASE_MSG + "No se puede expulsar a un jugador de un torneo finalizado");
-    }
-    
-    if ((options.fields.includes("puntaje") || options.fields.includes("posicion")) &&
-       (torneo.estado === 'Pendiente' || torneo.estado === 'Finalizado')) {
-      throw new Error(BASE_MSG + "El torneo todavía no empezó o ya finalizó");
-    }
-  }
+  1. Antes de actualizar, se necesita el token JWT para comprobar que:
+  - El usuario esté logueado
+  - El usuario sea administrador
+  - El torneo al que está vinculado la inscripción sea suyo
 
-  // En realidad no debería eliminarse el registro al expulsar a un jugador, incluso si el torneo está
-  // en estado "Pendiente".
+  2. Antes de actualizar, en el hook @BeforeUpdate, se necesita comprobar que:
+  - Si se quiere expulsar a un jugador
+    - Solo ese campo haya sido modificado
+    - Que se esté modificando a true
+    - El torneo esté en estado 'Pendiente' o 'En curso'
+  - Si se quiere modificar el puntaje y/o posición
+    - El estado no haya sido modificado
+    - El torneo esté en estado 'En curso'
 
-  // Se podrá actualizar el campo "expulsado", pero no se eliminará el registro para mantener constancia
-  // de quiénes pueden inscribirse y quiénes no. Solo se elimina el registro si el usuario que se
-  // inscribió se da de baja por su propia cuenta.
+  3. Luego, se intentan actualizar estos campos en la consulta de Sequelize:
+  - Expulsado
+  - Puntaje
+  - Posición
 
-  // Así, ese usuario puede volver a inscribirse si quiere, pero si es expulsado el registro de la expulsión
-  // seguirá disponible y su ID impedirá que se inscriba nuevamente gracias a la restricción de unicidad.
+  Campos que NUNCA se intentan actualizar en la consulta de Sequelize (obviando el ID y claves
+  foráneas):
+  - Elo inicial
 
+  4. Después de actualizar, en el hook @AfterUpdate, se necesita que:
+  - Si se expulsó a un jugador
+    - En caso de que con la expulsión de este jugador haya quedado un solo jugador en el
+      torneo, se establezca como ganador al usuario restante
+    - Se actualice el Elo del jugador expulsado por las partidas que llegó a jugar
+    - El resultado de todas las partidas que todavía no jugó se establezca al jugador contrario
+    - En caso de que el otro jugador también fuera expulsado o eliminado (ID null), se
+      establece el resultado a 'Cancelado'
+
+  ------------------------------------------------------------------------------------------------
+  */
+
+
+
+  /*
+  ------------------------------------------------------------------------------------------------
+
+  DESTROY
+
+  1. Antes de eliminar, se necesita el token JWT para comprobar que:
+  - El usuario esté logueado
+  - La inscripción sea suya
+  - Si la inscripción no es suya, que el usuario sea administrador, que el torneo al que está
+    vinculado la inscripción sea suyo y que la inscripción no pertenezca a otro administrador
+  
+  2. Antes de eliminar, en el hook @BeforeDestroy, se necesita comprobar que:
+  - El torneo al que está vinculado la inscripción esté en estado 'Pendiente'
+
+  3. Luego, se elimina el registro en la consulta de Sequelize.
+
+  ------------------------------------------------------------------------------------------------
+  */
 }

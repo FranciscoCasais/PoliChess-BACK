@@ -24,10 +24,10 @@ export class Comentario extends Model<Comentario> {
 
   @ForeignKey(() => Usuario)
   @Column({ type: DataType.INTEGER.UNSIGNED, onDelete: "SET NULL", onUpdate: "CASCADE" })
-  usuario_id?: number;
+  usuario_id?: number | null;
 
   @BelongsTo(() => Usuario)
-  usuario?: Usuario;
+  usuario?: Usuario | null;
 
   @ForeignKey(() => Noticia)
   @Column({ type: DataType.INTEGER.UNSIGNED, allowNull: false, onDelete: "CASCADE", onUpdate: "CASCADE" })
@@ -44,6 +44,47 @@ export class Comentario extends Model<Comentario> {
   editado?: Date;
   */
 
-  @Column({ type: DataType.TEXT, allowNull: false, validate: { notEmpty: true }})
+  @Column({ type: DataType.STRING(255), allowNull: false, validate: { notEmpty: true }})
   contenido!: string;
+  
+
+  /*
+  ------------------------------------------------------------------------------------------------
+
+  CREATE
+
+  1. Antes de insertar, se necesita el token JWT para comprobar que:
+  - El usuario esté logueado
+  - El ID del usuario sea el mismo que el ID del usuario en el token
+
+  2. Luego, se intentan insertar estos campos en la consulta de Sequelize:
+  - ID del usuario
+  - ID de la noticia
+  - Contenido
+
+  ------------------------------------------------------------------------------------------------
+
+  UPDATE
+
+  1. Antes de actualizar, se necesita el token JWT para comprobar que:
+  - El usuario esté logueado
+  - El comentario sea suyo
+
+  2. Luego, se intentan actualizar estos campos en la consulta de Sequelize
+  - Contenido
+
+  ------------------------------------------------------------------------------------------------
+
+  DESTROY
+
+  1. Antes de eliminar, se necesita el token JWT para comprobar que:
+  - El usuario esté logueado
+  - El comentario sea suyo
+  - Si el comentario no es suyo, que el usuario sea administrador y que el comentario no
+    pertenezca a otro administrador
+
+  2. Luego, se elimina el registro en la consulta de Sequelize.
+
+  ------------------------------------------------------------------------------------------------
+  */
 }

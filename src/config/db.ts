@@ -30,7 +30,7 @@ export async function prepararBD(sequelize: Sequelize): Promise<void> {
     logger.info(`Se estableció exitosamente la conexión con la base de datos \"${ process.env.DB_NAME || "polichess" }\"`);
 
     // CAMBIAR POR ALTER AL TERMINAR EL DESARROLLO
-    return sequelize.sync({ force: true });
+    return sequelize.sync({ alter: true });
   })
   .then(() => {
     logger.info("Se sincronizaron los modelos exitosamente");

@@ -1,11 +1,6 @@
-import { EsAntesOIgual } from '../misc/compare-dates';
-import { horarioEnRangoValido } from '../misc/is-valid-time-range';
 import { Table, Model, Column, DataType, PrimaryKey, ForeignKey, BelongsTo, HasMany, BeforeCreate, BeforeUpdate } from 'sequelize-typescript';
-import { Ronda } from './ronda.model';
-import { sumarHorarios } from '../misc/add-hours';
 import { Usuario } from './usuario.model';
 import { Usuario_Torneo } from './usuario_torneo.model';
-import { sumarDias } from '../misc/add-days';
 
 @Table({
   tableName: "torneo",
@@ -24,41 +19,41 @@ import { sumarDias } from '../misc/add-days';
   engine: "InnoDB"
 })
 export class Torneo extends Model<Torneo> {
-  private static duracionEstandar: string = "03:00";
-  private static duracionRapido: string = "01:00";
-  private static duracionBlitz: string = "00:15";
-  private static horarioMinimo: string = "08:00";
-  private static horarioMaximo: string = "23:00";
-  private static minimoJugadores: number = 2;
-  private static maximoJugadoresSuizo: number = 128;
-  private static maximoJugadoresTCT: number = 20;
-  private static maximoJugadoresTCTx2: number = 10;
-  private static minimoRondasSuizo: number = 4;
-  private static maximoRondasSuizo: number = 10;
-  private static limiteDeEspera: number = 30;
+  public static duracionMaximaEstandar: string = "03:00:00";
+  public static duracionMaximaRapido: string = "01:30:00";
+  public static duracionMaximaBlitz: string = "00:15:00";
+  public static horarioMinimo: string = "08:00:00";
+  public static horarioMaximo: string = "23:00:00";
+  public static minimoJugadores: number = 2;
+  public static maximoJugadoresSuizo: number = 100;
+  public static maximoJugadoresTCT: number = 20;
+  public static maximoJugadoresTCTx2: number = 10;
+  public static minimoIntervaloRondas: number = 1;
+  public static maximoIntervaloRondas: number = 14;
+  public static minimoRondasSuizo: number = 4;
+  public static maximoRondasSuizo: number = 10;
+  public static minimoDeEspera: number = 7;
+  public static limiteDeEspera: number = 30;
 
   @PrimaryKey
   @Column({ type: DataType.INTEGER.UNSIGNED, autoIncrement: true })
   id!: number;
 
-  @HasMany(() => Ronda, { foreignKey: "torneo_id", as: "rondas" })
-  rondas?: Ronda[];
-
   @HasMany(() => Usuario_Torneo, { foreignKey: "torneo_id", as: "usuario_torneos" })
-  usuario_torneos?: Usuario_Torneo[];
+  usuario_torneos?: Usuario_Torneo[] | null;
 
   @Column({ type: DataType.STRING(45), allowNull: false, validate: { notEmpty: true }})
   nombre!: string;
 
   @ForeignKey(() => Usuario)
-  @Column({ type: DataType.INTEGER.UNSIGNED, onDelete: "SET NULL", onUpdate: "CASCADE" })
-  organizador_id?: number;
+  @Column({ type: DataType.INTEGER.UNSIGNED, allowNull: false, onDelete: "NO ACTION", onUpdate: "CASCADE" })
+  organizador_id!: number;
 
   @BelongsTo(() => Usuario)
-  organizador?: Usuario;
+  organizador!: Usuario;
 
   @Column({ type: DataType.STRING(255), validate: { notEmpty: true }})
-  descripcion?: string;
+  descripcion?: string | null;
 
   @Column({ type: DataType.ENUM('Estándar', 'Rápido', 'Blitz'), allowNull: false })
   ritmo!: 'Estándar' | 'Rápido' | 'Blitz';
@@ -67,19 +62,13 @@ export class Torneo extends Model<Torneo> {
   sistema_emparejamiento!: 'Suizo' | 'Todos contra todos' | 'Todos contra todos (ida y vuelta)';
 
   @Column({ type: DataType.TINYINT.UNSIGNED, defaultValue: null })
-  cantidad_rondas?: number;
+  cantidad_rondas?: number | null;
 
-  @Column({ type: DataType.ENUM('Buchholz', 'Buchholz mediano', 'Buchholz -1', 'Sonneborn-Berger'), allowNull: false })
-  criterio_desempate!: 'Buchholz' | 'Buchholz mediano' | 'Buchholz -1' | 'Sonneborn-Berger';
-
-  @Column({ type: DataType.DATEONLY, allowNull: false })
-  fecha_inicio!: Date;
+  @Column({ type: DataType.DATE, allowNull: false })
+  fecha_hora_inicio!: Date;
 
   @Column({ type: DataType.TINYINT.UNSIGNED, allowNull: false })
   intervalo_rondas!: number;
-
-  @Column({ type: DataType.TIME, allowNull: false })
-  horario_preferido!: string;
 
   @Column({ type: DataType.TINYINT.UNSIGNED, allowNull: false })
   minimo_jugadores!: number;
@@ -93,118 +82,126 @@ export class Torneo extends Model<Torneo> {
   @Column({ type: DataType.SMALLINT.UNSIGNED, allowNull: false })
   maximo_elo!: number;
 
-  @Column({ type: DataType.ENUM('Pendiente', 'En curso', 'Finalizado', 'Cancelado'), allowNull: false, defaultValue: 'Pendiente' })
-  estado!: 'Pendiente' | 'En curso' | 'Finalizado' | 'Cancelado';
 
-  public validarSistemaEmparejamiento(): boolean {
-    return (this.sistema_emparejamiento === 'Suizo'
-      || this.sistema_emparejamiento === 'Todos contra todos'
-      || this.sistema_emparejamiento === 'Todos contra todos (ida y vuelta)');
-  }
+  /*
+  ------------------------------------------------------------------------------------------------
+  
+  CREATE
 
-  public validarRondasSistemaSuizo(): boolean {
-    return (this.sistema_emparejamiento !== 'Suizo' && this.cantidad_rondas === undefined);
-  }
+  1. Antes de insertar, se necesita el token JWT para comprobar que:
+  - El usuario esté logueado
+  - El usuario sea administrador
+  - El ID del organizador sea el mismo que el ID del usuario en el token
 
-  public validarCantidadRondas(): boolean {
-    return (this.sistema_emparejamiento === 'Suizo'
-      && this.cantidad_rondas! >= Torneo.minimoRondasSuizo
-      && this.cantidad_rondas! <= Torneo.maximoRondasSuizo);
-  }
+  2. Antes de insertar, en el hook @BeforeCreate, se necesita comprobar que:
+  - Si se seleccionó el sistema de emparejamiento suizo, que la cantidad de rondas se haya
+    establecido entre los límites aceptados
+  - Si no se seleccionó el sistema suizo, que la cantidad de rondas sea null o undefined
+  - La fecha de inicio esté entre los límites de espera
+  - El intervalo de rondas sea un número entero mayor a 0 y menor a 15
+  - El horario de inicio de las rondas esté por delante de las 08:00:00 AM
+  - El horario de inicio de las rondas + la duración máxima de las partidas (dependiendo del
+    ritmo) no sobrepase las 23:00:00 PM
+  - La cantidad mínima de jugadores no sea mayor a la cantidad máxima de jugadores
+  - La cantidad de jugadores respete los límites del sistema de emparejamiento
+  - El Elo mínimo no sea mayor al Elo máximo
 
-  public validarFechaInicio(): boolean {
-    return !(EsAntesOIgual(this.fecha_inicio, new Date()) || this.fecha_inicio > sumarDias(new Date(), Torneo.limiteDeEspera));
-  }
+  3. Luego, se intentan insertar estos campos en la consulta de Sequelize:
+  - Nombre
+  - ID del organizador
+  - Descripción: Si es null, se deja así
+  - Ritmo
+  - Sistema de emparejamiento
+  - Cantidad de rondas: Si es null, se deja así
+  - Fecha de inicio
+  - Intervalo en días de las rondas
+  - Horario preferido de las rondas
+  - Cantidad mínima de jugadores
+  - Cantidad máxima de jugadores
+  - Elo mínimo requerido
+  - Elo máximo requerido
 
-  public validarIntervaloRondas(): boolean {
-    return !(!Number.isInteger(this.intervalo_rondas) || this.intervalo_rondas <= 0);
-  }
+  Campos que NUNCA se intentan insertar en la consulta de Sequelize (obviando el ID y claves
+  foráneas):
+  - Estado: adopta 'Pendiente'
 
-  public validarFormatoHorario(): string | null {
-    const duracionRondas: string = this.ritmo === 'Estándar' ? Torneo.duracionEstandar : (this.ritmo === 'Rápido' ? Torneo.duracionRapido : Torneo.duracionBlitz);
-    const horasSumadas: string | null = sumarHorarios(this.horario_preferido, duracionRondas);
+  ------------------------------------------------------------------------------------------------
+  */
 
-    return horasSumadas;
-  }
+  /*
+  ------------------------------------------------------------------------------------------------
 
-  public validarHorario(): boolean {
-    const horasSumadas: string | null = this.validarFormatoHorario();
-    return !(!horasSumadas || !horarioEnRangoValido(horasSumadas, Torneo.horarioMinimo, Torneo.horarioMaximo));
-  }
+  UPDATE
 
-  public validarCantidadJugadores(): boolean {
-    const limitesCoherentes: boolean = (this.minimo_jugadores > this.maximo_jugadores);
-    const limitesRespetados: boolean = ((this.sistema_emparejamiento === 'Suizo' ? (this.maximo_jugadores <= Torneo.maximoJugadoresSuizo)
-      : (this.sistema_emparejamiento === 'Todos contra todos' ? (this.maximo_jugadores <= Torneo.maximoJugadoresTCT)
-      : (this.maximo_jugadores <= Torneo.maximoJugadoresTCTx2 && this.minimo_jugadores >= Torneo.minimoJugadores)))
-      && this.minimo_jugadores >= Torneo.minimoJugadores);
-    return !(limitesCoherentes && limitesRespetados);
-  }
+  1. Antes de actualizar, se necesita el token JWT para comprobar que:
+  - El usuario esté logueado
+  - El usuario sea administrador
+  - El torneo sea suyo
 
-  public validarElo(): boolean {
-    return !(this.minimo_elo > this.maximo_elo);
-  }
+  2. Antes de actualizar, en el hook @BeforeUpdate, se necesita comprobar que:
+  - Comprobar que el estado sea 'Pendiente' o 'En curso'
+  - En caso de que el torneo esté en estado 'Pendiente'
+    - Realizar todas las mismas validaciones que en el hook @BeforeCreate
+    - Borrar las inscripciones a los últimos jugadores inscritos si la nueva cantidad máxima de
+      jugadores es menos a la cantidad actual
+    - Expulsar a los jugadores que no cumplan con los nuevos requisitos de Elo
+    - No se haya cambiado el estado a 'Finalizado' ni 'Cancelado' (cuando está pendiente y se
+      quiere cancelar, se hace una request delete)
+    - Si se cambia el estado a 'En curso', que la fecha de inicio sea la fecha actual y se haya
+      alcanzado el mínimo de jugadores
+  - En caso de que el estado sea 'En curso'
+    - Solo se esté intentando cambiar el estado
+    - No se haya cambiado el estado a 'Pendiente'
+    - Si se cambia el estado a 'Finalizado', no haya partidas sin resultados registrados
 
-  public validar(): void {
-    const BASE_MSG: string = "No se puedo crear el torneo: ";
+  3. Luego, se intentan actualizar estos campos en la consulta de Sequelize:
+  - Nombre
+  - Descripción
+  - Ritmo
+  - Sistema de emparejamiento
+  - Cantidad de rondas
+  - Fecha de inicio
+  - Intervalo en días de las rondas
+  - Horario preferido de las rondas
+  - Cantidad mínima de jugadores
+  - Cantidad máxima de jugadores
+  - Elo mínimo requerido
+  - Elo máximo requerido
+  - Estado
+  
+  4. Después de actualizar, en el hook @AfterUpdate, se necesita que:
+  - Si el estado fue cambiado a 'En curso'
+    - Si el sistema de emparejamiento no es el suizo
+      - Calcular la cantidad de rondas en base a la cantidad de jugadores inscritos
+      - Programar el fixture completo
+    - Si el sistema de emparejamiento es suizo, programar la primera ronda y al resto dejarlas
+      llenas de partidos con IDs de jugadores y resultado en null
+  - Si el estado fue cambiado a 'Finalizado'
+    - Se actualicen los Elos de todos los jugadores
+  - Si el estado fue cambiado a 'Cancelado' (se hizo una request put cuando estaba en curso,
+    si se quiere eliminar cuando está pendiente se hace una request delete)
+    - Se actualicen los Elos de todos los jugadores no expulsados en base a las partidas que
+      se hayan llegado a jugar
+    - Establecer el estado de todas las partidas que no se hayan jugado en 'Cancelado'
+  
+  ------------------------------------------------------------------------------------------------
+  */
 
-    if (!this.validarSistemaEmparejamiento()) {
-      throw new Error(BASE_MSG + "El sistema de emparejamiento no es válido");
-    }
+  /*
+  ------------------------------------------------------------------------------------------------
 
-    if (!this.validarRondasSistemaSuizo()) {
-      throw new Error(BASE_MSG + "No se puede establecer una cantidad de rondas con un sistema de emparejamiento distinto al suizo");
-    }
+  DESTROY
 
-    if (!this.validarCantidadRondas()) {
-      throw new Error(BASE_MSG + "Cantidad de rondas inválida para este sistema de emparejamiento");
-    }
-    
-    if (!this.validarFechaInicio()) {
-      throw new Error(BASE_MSG + "La fecha de inicio no puede ser anterior a la fecha actual o mayor a 30 días");
-    }
+  1. Antes de eliminar, se necesita el token JWT para comprobar que:
+  - El usuario esté logueado
+  - El usuario sea administrador
+  - El torneo sea suyo
 
-    if (!this.validarIntervaloRondas()) {
-      throw new Error(BASE_MSG + "El intervalo de rondas debe ser un número entero mayor a 0");
-    }
-    
-    if (!this.validarHorario()) {
-      throw new Error(BASE_MSG + "El horario de inicio de las rondas debe ser una cadena en formato \"HH:MM\" y estar entre las " + Torneo.horarioMinimo + " y " + Torneo.horarioMaximo);
-    }
+  2. Antes de eliminar, en el hook @BeforeDestroy, se necesita comprobar que:
+  - El torneo está en estado 'Pendiente'
 
-    if (!this.validarCantidadJugadores()) {
-      throw new Error(BASE_MSG + "La cantidad mínima de jugadores no puede ser mayor a la cantidad máxima de jugadores");
-    }
+  3. Luego, se elimina el registro en la consulta de Sequelize.
 
-    if (!this.validarElo()) {
-      throw new Error(BASE_MSG + "El Elo mínimo no puede ser mayor al Elo máximo");
-    }
-  }
-
-  @BeforeCreate
-  static validarTorneo(torneo: Torneo): void {
-    torneo.validar();
-  }
-
-  @BeforeUpdate
-  static async validarActualizacion(torneo: Torneo, options: any): Promise<void> {
-    const BASE_MSG: string = "No se pudo actualizar el torneo: ";
-
-    if (torneo.previous("estado") === 'Pendiente') {
-      torneo.validar();
-
-      // Eliminar las inscripciones de los últimos jugadores en inscribirse hasta que la cantidad de jugadores
-      // sea menor o igual a la cantidad máxima de jugadores actualizada
-
-      // Eliminar las inscripciones de los jugadores que no cumplen con los requisitos de Elo actualizados
-
-      // Si se le da inicio, corroborar que la fecha de inicio sea hoy
-      // Programación de rondas y partidos EN AFTER UPDATE
-    } else if (torneo.previous("estado") === 'En curso') {
-      // Verificar que no se quiera cambiar cualquier otra cosa que no sea el estado
-      // Cancelación
-    } else {
-      throw new Error(BASE_MSG + "No se puede modificar un torneo finalizado o cancelado");
-    }
-  }
+  ------------------------------------------------------------------------------------------------
+  */
 }
