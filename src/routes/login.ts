@@ -1,7 +1,7 @@
 import { Request as IReq, Response as IRes, Router } from "express";
 import { HttpStatusCodes } from "../constants/HttpStatusCodes";
 import { Usuario } from "../models/usuario.model";
-import { generateToken } from "../util/auth";
+import { generateToken } from "../util/jwt";
 import logger from "jet-logger";
 import paths from "./common/paths";
 
@@ -20,8 +20,9 @@ routerLogin.post(`${paths.base}/${paths.login}`, async (req: IReq, res: IRes): P
       return;
     }
 
-    const token: string = generateToken(usuario.id);
-    res.json({ token });
+    const token: string = generateToken(usuario.id, usuario.administrador);
+    res.status(HttpStatusCodes.OK).json({ token });
+    return;
   } catch (error) {
     logger.err(error, true);
     res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Error interno" });

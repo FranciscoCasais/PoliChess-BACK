@@ -1,15 +1,22 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
+import { HttpStatusCodes } from "../constants/HttpStatusCodes";
+import { Request, Response, NextFunction } from "express";
+import { JwtPayload } from "jsonwebtoken";
+import { verifyToken } from "./jwt";
 
-const SECRET_KEY = process.env.JWT_SECRET || "mi_clave_secreta";
+export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
+  const token = req.headers.authorization?.split(" ")[1];
 
-export function generateToken(idUsuario: number): string {
-  return jwt.sign({ id: idUsuario }, SECRET_KEY, { expiresIn: "2h" });
-}
-
-export function verifyToken(token: string): string | JwtPayload | null {
-  try {
-    return jwt.verify(token, SECRET_KEY);
-  } catch (error) {
-    return null;
+  if (!token) {
+    res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "No autorizado" });
+    return;
   }
+
+  const decoded = verifyToken(token);
+  if (!decoded) {
+    res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "Token inválido" });
+    return;
+  }
+
+  (req as any).id = (decoded as JwtPayload).id;
+  next();
 }

@@ -1,5 +1,6 @@
 import 'express-async-errors';
 
+import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
@@ -27,14 +28,15 @@ import inscripcionService from './services/inscripcion.service';
 import noticiaService from './services/noticia.service';
 import comentarioService from './services/comentario.service';
 
-import routerLogin from './routes/auth';
-import { authMiddleware } from './util/auth-token';
+import routerLogin from './routes/login';
+import { authMiddleware } from './util/auth';
 import { Usuario_Torneo } from './models/usuario_torneo.model';
 
 
 const app: express.Application = express();
 
 app.use(express.json());
+app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
 if (entornoActual.NodeEnv === NodeEnvs.DEV.valueOf()) {
@@ -44,6 +46,8 @@ if (entornoActual.NodeEnv === NodeEnvs.DEV.valueOf()) {
 }
 
 prepararBD(sequelize);
+
+app.options('*', cors());
 
 app.get(`${paths.base}/${paths.usuarios.base}/${paths.usuarios.getOne}`,
   (req: Request, res: Response, next: NextFunction) => {
@@ -82,14 +86,13 @@ app.put(`${paths.base}/${paths.usuarios.base}/${paths.usuarios.update}`,
 app.delete(`${paths.base}/${paths.usuarios.base}/${paths.usuarios.delete}`,
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
-  const usuarioRequest: Usuario | null = await Usuario.findByPk((req as any).id);
+  const { id } = req.params;
 
-  if (usuarioRequest!.id !== (req as any).id && usuarioRequest!.administrador === false) {
+  if (Number(id) !== (req as any).id && !(req as any).administrador) {
     res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "No autorizado" });
     return;
   }
 
-  const { id } = req.params;
   usuarioService.delete(Number(id))
     .then(data => res.json(data))
     .catch(next);
@@ -114,9 +117,8 @@ app.get(`${paths.base}/${paths.torneos.base}/${paths.torneos.getSome}`,
 app.post(`${paths.base}/${paths.torneos.base}/${paths.torneos.add}`,
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
-  const usuarioRequest: Usuario | null = await Usuario.findByPk((req as any).id);
 
-  if (usuarioRequest!.administrador === false) {
+  if (!(req as any).administrador) {
     res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "No autorizado" });
     return;
   }
@@ -130,14 +132,13 @@ app.post(`${paths.base}/${paths.torneos.base}/${paths.torneos.add}`,
 app.put(`${paths.base}/${paths.torneos.base}/${paths.torneos.update}`,
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
-  const usuarioRequest: Usuario | null = await Usuario.findByPk((req as any).id);
-  const torneo = req.body;
 
-  if (usuarioRequest!.administrador === false) {
+  if (!(req as any).administrador) {
     res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "No autorizado" });
     return;
   }
 
+  const torneo = req.body;
   torneoService.update(torneo)
     .then(data => res.json(data))
     .catch(next);
@@ -146,14 +147,13 @@ app.put(`${paths.base}/${paths.torneos.base}/${paths.torneos.update}`,
 app.delete(`${paths.base}/${paths.torneos.base}/${paths.torneos.delete}`,
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
-  const usuarioRequest: Usuario | null = await Usuario.findByPk((req as any).id);
-  const { id } = req.params;
 
-  if (usuarioRequest!.administrador === false) {
+  if (!(req as any).administrador) {
     res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "No autorizado" });
     return;
   }
 
+  const { id } = req.params;
   torneoService.delete(Number(id))
     .then(data => res.json(data))
     .catch(next);
@@ -200,13 +200,9 @@ app.delete(`${paths.base}/${paths.torneos.inscripciones.base}/${paths.torneos.in
   const { id } = req.params;
   const inscripcion: Usuario_Torneo | null = await inscripcionService.getOne(Number(id));
 
-  if (inscripcion!.id !== (req as any).id) {
-    const usuarioRequest: Usuario | null = await Usuario.findByPk((req as any).id);
-
-    if (usuarioRequest!.administrador === false) {
-      res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "No autorizado" });
-      return;
-    }
+  if (inscripcion!.usuario_id !== (req as any).id && !(req as any).administrador === false) {
+    res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "No autorizado" });
+    return;
   }
 
   inscripcionService.delete(Number(id))
@@ -233,9 +229,8 @@ app.get(`${paths.base}/${paths.noticias.base}/${paths.noticias.getSome}`,
 app.post(`${paths.base}/${paths.noticias.base}/${paths.noticias.add}`,
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
-  const usuarioRequest: Usuario | null = await Usuario.findByPk((req as any).id);
 
-  if (usuarioRequest!.administrador === false) {
+  if (!(req as any).administrador) {
     res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "No autorizado" });
     return;
   }
@@ -249,9 +244,8 @@ app.post(`${paths.base}/${paths.noticias.base}/${paths.noticias.add}`,
 app.put(`${paths.base}/${paths.noticias.base}/${paths.noticias.update}`,
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
-  const usuarioRequest: Usuario | null = await Usuario.findByPk((req as any).id);
 
-  if (usuarioRequest!.administrador === false) {
+  if (!(req as any).administrador) {
     res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "No autorizado" });
     return;
   }
@@ -265,9 +259,8 @@ app.put(`${paths.base}/${paths.noticias.base}/${paths.noticias.update}`,
 app.delete(`${paths.base}/${paths.noticias.base}/${paths.noticias.delete}`,
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
-  const usuarioRequest: Usuario | null = await Usuario.findByPk((req as any).id);
 
-  if (usuarioRequest!.administrador === false) {
+  if (!(req as any).administrador) {
     res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "No autorizado" });
     return;
   }
@@ -319,13 +312,9 @@ app.delete(`${paths.base}/${paths.noticias.comentarios.base}/${paths.noticias.co
   const { id } = req.params;
   const comentario: Comentario | null = await comentarioService.getOne(Number(id));
   
-  if (comentario!.usuario_id !== (req as any).id) {
-    const usuarioRequest: Usuario | null = await Usuario.findByPk((req as any).id);
-
-    if (usuarioRequest!.administrador === false) {
-      res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "No autorizado" });
-      return;
-    }
+  if (comentario!.usuario_id !== (req as any).id && !(req as any).administrador) {
+    res.status(HttpStatusCodes.UNAUTHORIZED).json({ message: "No autorizado" });
+    return;
   }
 
   comentarioService.delete(Number(id))
@@ -333,7 +322,7 @@ app.delete(`${paths.base}/${paths.noticias.comentarios.base}/${paths.noticias.co
     .catch(next);
 });
 
-app.post(`${paths.base}/${paths.login}`, routerLogin);
+app.use(routerLogin);
 
 app.get(`${paths.base}/${paths.perfil}`, authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
