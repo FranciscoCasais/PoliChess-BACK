@@ -1,10 +1,10 @@
 export default {
   base: "/polichess",
   login: "login",
-  perfil: "perfil",
   usuarios: {
     base: "usuarios",
-    getSome: "pagina/:pagina",
+    getSomeByBusqueda: "pagina/:pagina/busqueda/:busqueda",
+    getSomeByElo: "pagina/:pagina/:elo",
     getOne: ":id",
     add: "",
     update: "",
@@ -13,6 +13,8 @@ export default {
   torneos: {
     base: "torneos",
     getSome: "pagina/:pagina",
+    getSomeByBusqueda: "pagina/:pagina/busqueda/:busqueda",
+    getSomeByRitmo: "pagina/:pagina/:ritmo",
     getOne: ":id",
     add: "",
     update: "",
@@ -29,13 +31,15 @@ export default {
   noticias: {
     base: "noticias",
     getSome: "pagina/:pagina",
+    getSomeByBusqueda: "pagina/:pagina/busqueda/:busqueda",
     getOne: ":id",
     add: "",
     update: "",
     delete: ":id",
     comentarios: {
       base: "comentarios",
-      getSome: "pagina/:pagina",
+      getSomeByASC: "pagina/:pagina",
+      getSomeByDESC: "pagina/:pagina",
       getOne: ":id",
       add: "",
       update: "",

@@ -1,8 +1,18 @@
 import { Comentario } from '../models/comentario.model';
 
-async function getSome(idNoticia: number, pagina: number): Promise<Comentario[]> {
+async function getSomeByASC(idNoticia: number, pagina: number): Promise<Comentario[]> {
   return await Comentario.findAll({
     where: { noticia_id: idNoticia },
+    order: [['createdAt', 'ASC']],
+    limit: 10,
+    offset: (pagina - 1) * 10
+  });
+}
+
+async function getSomeByDESC(idNoticia: number, pagina: number): Promise<Comentario[]> {
+  return await Comentario.findAll({
+    where: { noticia_id: idNoticia },
+    order: [['createdAt', 'DESC']],
     limit: 10,
     offset: (pagina - 1) * 10
   });
@@ -33,7 +43,8 @@ async function delete_(id: number): Promise<number> {
 }
 
 export default {
-  getSome,
+  getSomeByASC,
+  getSomeByDESC,
   getOne,
   add,
   update,

@@ -34,6 +34,7 @@ import comentarioService from './services/comentario.service';
 import routerLogin from './routes/login';
 import { authMiddleware } from './util/auth';
 import { Usuario_Torneo } from './models/usuario_torneo.model';
+import { Next } from 'mysql2/typings/mysql/lib/parsers/typeCast';
 
 
 const app: express.Application = express();
@@ -60,10 +61,18 @@ app.get(`${paths.base}/${paths.usuarios.base}/${paths.usuarios.getOne}`,
     .catch(next);
 });
 
-app.get(`${paths.base}/${paths.usuarios.base}/${paths.usuarios.getSome}`,
+app.get(`${paths.base}/${paths.usuarios.base}/${paths.usuarios.getSomeByBusqueda}`,
   (req: Request, res: Response, next: NextFunction) => {
-  const { pagina } = req.params;
-  usuarioService.getSome(Number(pagina))
+  const { pagina, busqueda } = req.params;
+  usuarioService.getSomeByBusqueda(busqueda, Number(pagina))
+    .then(data => res.json(data))
+    .catch(next);
+});
+
+app.get(`${paths.base}/${paths.usuarios.base}/${paths.usuarios.getSomeByElo}`,
+  (req: Request, res: Response, next: NextFunction) => {
+  const { pagina, elo } = req.params;
+  usuarioService.getSomeByElo(elo, Number(pagina))
     .then(data => res.json(data))
     .catch(next);
 });
@@ -120,6 +129,23 @@ app.get(`${paths.base}/${paths.torneos.base}/${paths.torneos.getSome}`,
     .then(data => res.json(data))
     .catch(next);
 });
+
+app.get(`${paths.base}/${paths.torneos.base}/${paths.torneos.getSomeByBusqueda}`,
+  (req: Request, res: Response, next: NextFunction) => {
+  const { busqueda, pagina } = req.params;
+  torneoService.getSomeByBusqueda(busqueda, Number(pagina))
+    .then(data => res.json(data))
+    .catch(next);
+});
+
+app.get(`${paths.base}/${paths.torneos.base}/${paths.torneos.getSomeByRitmo}`,
+  (req: Request, res: Response, next: NextFunction) => {
+  const { pagina, ritmo } = req.params;
+  torneoService.getSomeByRitmo(ritmo, Number(pagina))
+    .then(data => res.json(data))
+    .catch(next);
+  }
+);
 
 app.post(`${paths.base}/${paths.torneos.base}/${paths.torneos.add}`,
   authMiddleware,
@@ -233,6 +259,15 @@ app.get(`${paths.base}/${paths.noticias.base}/${paths.noticias.getSome}`,
     .catch(next);
 });
 
+app.get(`${paths.base}/${paths.noticias.base}/${paths.noticias.getSomeByBusqueda}`,
+  (req: Request, res: Response, next: NextFunction) => {
+  const { pagina, busqueda } = req.params;
+  noticiaService.getSomeByBusqueda(busqueda, Number(pagina))
+    .then(data => res.json(data))
+    .catch(next);
+  }
+);
+
 app.post(`${paths.base}/${paths.noticias.base}/${paths.noticias.add}`,
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
@@ -286,11 +321,20 @@ app.get(`${paths.base}/${paths.noticias.comentarios.base}/${paths.noticias.comen
     .catch(next);
 });
 
-app.get(`${paths.base}/${paths.noticias.base}/${paths.noticias.getOne}/${paths.noticias.comentarios.base}/${paths.noticias.comentarios.getSome}`,
+app.get(`${paths.base}/${paths.noticias.base}/${paths.noticias.getOne}/${paths.noticias.comentarios.base}/${paths.noticias.comentarios.getSomeByASC}`,
   (req: Request, res: Response, next: NextFunction) => {
   const idNoticia = req.params.id;
   const pagina = req.params.pagina;
-  comentarioService.getSome(Number(idNoticia), Number(pagina))
+  comentarioService.getSomeByASC(Number(idNoticia), Number(pagina))
+    .then(data => res.json(data))
+    .catch(next);
+});
+
+app.get(`${paths.base}/${paths.noticias.base}/${paths.noticias.getOne}/${paths.noticias.comentarios.base}/${paths.noticias.comentarios.getSomeByDESC}`,
+  (req: Request, res: Response, next: NextFunction) => {
+  const idNoticia = req.params.id;
+  const pagina = req.params.pagina;
+  comentarioService.getSomeByDESC(Number(idNoticia), Number(pagina))
     .then(data => res.json(data))
     .catch(next);
 });
@@ -331,12 +375,14 @@ app.delete(`${paths.base}/${paths.noticias.comentarios.base}/${paths.noticias.co
 
 app.use(routerLogin);
 
+/*
 app.get(`${paths.base}/${paths.perfil}`, authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
   await Usuario.findByPk((req as any).id)
     .then(data => res.json(data))
     .catch(next);
 });
+*/
 
 const storage = multer.diskStorage({
   destination: path.join(__dirname, "../public/uploads/"),

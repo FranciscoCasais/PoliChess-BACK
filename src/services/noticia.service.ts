@@ -1,7 +1,21 @@
 import { Noticia } from '../models/noticia.model';
+import { Op } from 'sequelize';
 
 async function getSome(pagina: number): Promise<Noticia[]> {
   return await Noticia.findAll({
+    order: [['createdAt', 'ASC']],
+    limit: 10,
+    offset: (pagina - 1) * 10
+  });
+}
+
+async function getSomeByBusqueda(busqueda: string, pagina: number): Promise<Noticia[]> {
+  return await Noticia.findAll({
+    where: {
+      titulo: {
+        [Op.like]: `%${busqueda}%`
+      }
+    },
     limit: 10,
     offset: (pagina - 1) * 10
   });
@@ -33,6 +47,7 @@ async function delete_(id: number): Promise<number> {
 
 export default {
   getSome,
+  getSomeByBusqueda,
   getOne,
   add,
   update,

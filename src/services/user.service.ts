@@ -1,7 +1,23 @@
 import { Usuario } from '../models/usuario.model';
+import { Op } from 'sequelize';
 
-async function getSome(pagina: number): Promise<Usuario[]> {
+async function getSomeByBusqueda(busqueda: string, pagina: number): Promise<Usuario[]> {
   return await Usuario.findAll({
+    where: {
+      nombre: {
+        [Op.like]: `%${busqueda}%`
+      }
+    },
+    limit: 10,
+    offset: (pagina - 1) * 10
+  })
+}
+
+async function getSomeByElo(elo: string, pagina: number): Promise<Usuario[]> {
+  const eloAFiltrar: string = elo === 'Estándar' ? 'estandar' : (elo === 'Rápido' ? 'rapido' : 'blitz');
+
+  return await Usuario.findAll({
+    order: [[`elo_${eloAFiltrar}`, 'DESC']],
     limit: 10,
     offset: (pagina - 1) * 10
   });
@@ -32,7 +48,8 @@ async function delete_(id: number): Promise<number> {
 }
 
 export default {
-  getSome,
+  getSomeByBusqueda,
+  getSomeByElo,
   getOne,
   add,
   update,
