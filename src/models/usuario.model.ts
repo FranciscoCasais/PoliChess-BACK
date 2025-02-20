@@ -44,7 +44,7 @@ export class Usuario extends Model<Usuario> {
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: 0 })
   administrador!: boolean;
 
-  @Column({ type: DataType.STRING(255), defaultValue: "Daniel Santi" })
+  @Column({ type: DataType.STRING(255), defaultValue: "/polichess/imagenes/default.png" })
   foto_perfil!: string;
 
   @Column({ type: DataType.DATEONLY })
@@ -63,7 +63,7 @@ export class Usuario extends Model<Usuario> {
   @BeforeCreate
   @BeforeUpdate
   static async hashPassword(usuario: Usuario): Promise<void> {
-    if (usuario.changed("contrasena_hash")) {
+    if (usuario.changed("contrasena_hash") || usuario.isNewRecord) {
       const saltRounds = 10;
       usuario.contrasena_hash = await bcrypt.hash(usuario.contrasena_hash, saltRounds);
     }

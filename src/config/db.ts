@@ -21,7 +21,8 @@ const sequelize: Sequelize = new Sequelize({
   password: `${process.env.DB_PASSWORD}`,
   dialect: "mysql",
   host: `${process.env.DB_HOST || "localhost"}`,
-  models: modelos
+  models: modelos,
+  timezone: '+00:00'
 });
 
 export async function prepararBD(sequelize: Sequelize): Promise<void> {
