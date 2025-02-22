@@ -44,7 +44,7 @@ export class Usuario extends Model<Usuario> {
   @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: 0 })
   administrador!: boolean;
 
-  @Column({ type: DataType.STRING(255), defaultValue: "/polichess/imagenes/default.png" })
+  @Column({ type: DataType.STRING(255), defaultValue: "/polichess/imagenes/fotoperfildefault.png" })
   foto_perfil!: string;
 
   @Column({ type: DataType.DATEONLY })

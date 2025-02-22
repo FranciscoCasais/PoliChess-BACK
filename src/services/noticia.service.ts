@@ -3,7 +3,7 @@ import { Op } from 'sequelize';
 
 async function getSome(pagina: number): Promise<Noticia[]> {
   return await Noticia.findAll({
-    order: [['createdAt', 'ASC']],
+    order: [['createdAt', 'DESC']],
     limit: 10,
     offset: (pagina - 1) * 10
   });
