@@ -1,5 +1,11 @@
 import { Comentario } from '../models/comentario.model';
 
+async function getTotal(idNoticia: number): Promise<number> {
+  return await Comentario.count({
+    where: { noticia_id: idNoticia }
+  });
+}
+
 async function getSomeByASC(idNoticia: number, pagina: number): Promise<Comentario[]> {
   return await Comentario.findAll({
     where: { noticia_id: idNoticia },
@@ -43,6 +49,7 @@ async function delete_(id: number): Promise<number> {
 }
 
 export default {
+  getTotal,
   getSomeByASC,
   getSomeByDESC,
   getOne,

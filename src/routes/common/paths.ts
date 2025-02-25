@@ -38,6 +38,7 @@ export default {
     delete: ":id",
     comentarios: {
       base: "comentarios",
+      getTotal: "",
       getSomeByASC: "asc/pagina/:pagina",
       getSomeByDESC: "desc/pagina/:pagina",
       getOne: ":id",

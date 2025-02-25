@@ -320,6 +320,14 @@ app.get(`${paths.base}/${paths.noticias.comentarios.base}/${paths.noticias.comen
     .catch(next);
 });
 
+app.get(`${paths.base}/${paths.noticias.base}/${paths.noticias.getOne}/${paths.noticias.comentarios.base}/${paths.noticias.comentarios.getTotal}`,
+  (req: Request, res: Response, next: NextFunction) => {
+  const idNoticia = req.params.id;
+  comentarioService.getTotal(Number(idNoticia))
+    .then(data => res.json(data))
+    .catch(next);
+});
+
 app.get(`${paths.base}/${paths.noticias.base}/${paths.noticias.getOne}/${paths.noticias.comentarios.base}/${paths.noticias.comentarios.getSomeByASC}`,
   (req: Request, res: Response, next: NextFunction) => {
   const idNoticia = req.params.id;

@@ -44,7 +44,7 @@ export class Comentario extends Model<Comentario> {
   editado?: Date;
   */
 
-  @Column({ type: DataType.STRING(255), allowNull: false, validate: { notEmpty: true }})
+  @Column({ type: DataType.TEXT, allowNull: false, validate: { notEmpty: true }})
   contenido!: string;
   
 

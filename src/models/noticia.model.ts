@@ -28,7 +28,7 @@ export class Noticia extends Model<Noticia> {
   @Column({ type: DataType.STRING(255), allowNull: false, validate: { notEmpty: true }})
   copete!: string;
 
-  @Column({ type: DataType.STRING(255), defaultValue: "/polichess/imagenes/noticiadefault.png" })
+  @Column({ type: DataType.STRING(255), allowNull: false, defaultValue: "/polichess/imagenes/noticiadefault.png" })
   imagen!: string;
 
   @ForeignKey(() => Usuario)
