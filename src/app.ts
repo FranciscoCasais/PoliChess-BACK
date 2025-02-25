@@ -144,8 +144,7 @@ app.get(`${paths.base}/${paths.torneos.base}/${paths.torneos.getSomeByRitmo}`,
   torneoService.getSomeByRitmo(ritmo, Number(pagina))
     .then(data => res.json(data))
     .catch(next);
-  }
-);
+});
 
 app.post(`${paths.base}/${paths.torneos.base}/${paths.torneos.add}`,
   authMiddleware,
@@ -396,8 +395,6 @@ app.post("/polichess/subirimagen", upload.single("file"), (req, res) => {
   if (!req.file) {
     res.status(400).json({ error: "No se ha subido ningún archivo" });
     return;
-  } else {
-    console.log("Archivo recibido: ", req.file);
   }
 
   res.json({ message: "Imagen subida con éxito", path: `/polichess/imagenes/${req.file.filename}` });

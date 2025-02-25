@@ -4,8 +4,8 @@ async function getSomeByASC(idNoticia: number, pagina: number): Promise<Comentar
   return await Comentario.findAll({
     where: { noticia_id: idNoticia },
     order: [['createdAt', 'ASC']],
-    limit: 10,
-    offset: (pagina - 1) * 10
+    limit: 15,
+    offset: (pagina - 1) * 15
   });
 }
 
@@ -13,8 +13,8 @@ async function getSomeByDESC(idNoticia: number, pagina: number): Promise<Comenta
   return await Comentario.findAll({
     where: { noticia_id: idNoticia },
     order: [['createdAt', 'DESC']],
-    limit: 10,
-    offset: (pagina - 1) * 10
+    limit: 15,
+    offset: (pagina - 1) * 15
   });
 }
 

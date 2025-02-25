@@ -4,8 +4,8 @@ import { Op } from 'sequelize';
 async function getSome(pagina: number): Promise<Noticia[]> {
   return await Noticia.findAll({
     order: [['createdAt', 'DESC']],
-    limit: 10,
-    offset: (pagina - 1) * 10
+    limit: 12,
+    offset: (pagina - 1) * 12
   });
 }
 
@@ -16,8 +16,8 @@ async function getSomeByBusqueda(busqueda: string, pagina: number): Promise<Noti
         [Op.like]: `%${busqueda}%`
       }
     },
-    limit: 10,
-    offset: (pagina - 1) * 10
+    limit: 12,
+    offset: (pagina - 1) * 12
   });
 }
 

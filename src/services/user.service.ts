@@ -4,9 +4,11 @@ import { Op } from 'sequelize';
 async function getSomeByBusqueda(busqueda: string, pagina: number): Promise<Usuario[]> {
   return await Usuario.findAll({
     where: {
-      nombre: {
-        [Op.like]: `%${busqueda}%`
-      }
+      [Op.or]: [
+        { nombre: { [Op.like]: `%${busqueda}%` } },
+        { apellido: { [Op.like]: `%${busqueda}%` } },
+        { nombre_usuario: { [Op.like]: `%${busqueda}%` } }
+      ]
     },
     limit: 10,
     offset: (pagina - 1) * 10

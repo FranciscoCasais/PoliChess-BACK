@@ -2,8 +2,8 @@ import { Usuario_Torneo } from '../models/usuario_torneo.model';
 
 async function getSome(pagina: number): Promise<Usuario_Torneo[]> {
   return await Usuario_Torneo.findAll({
-    limit: 10,
-    offset: (pagina - 1) * 10
+    limit: 15,
+    offset: (pagina - 1) * 15
   });
 }
 
