@@ -206,16 +206,34 @@ app.get(`${paths.base}/${paths.torneos.base}/${paths.torneos.getOne}/${paths.tor
     .then(data => res.json(data))
     .catch(next);
 });
-
-app.post(`${paths.base}/${paths.torneos.inscripciones.base}/${paths.torneos.inscripciones.add}`,
-  authMiddleware,
-  (req: Request, res: Response, next: NextFunction) => {
+app.post('/inscripciones', authMiddleware, (req, res, next) => {
   const inscripcion = req.body;
-
   inscripcionService.add(inscripcion)
     .then(data => res.json(data))
     .catch(next);
 });
+
+
+app.post(`${paths.base}/${paths.torneos.inscripciones.base}/${paths.torneos.inscripciones.add}`,
+  authMiddleware,
+  (req: Request, res: Response, next: NextFunction) => {
+    const usuario_id = (req as any).id;
+    const torneo_id = req.body.torneo_id;
+
+    inscripcionService.add({ usuario_id, torneo_id })
+      .then(data => res.json(data))
+      .catch(err => res.status(400).json({ error: err.message }));
+});
+app.get(`${paths.base}/inscripciones/torneo/:torneoId/usuario/:usuarioId`, authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+  const { torneoId, usuarioId } = req.params;
+  try {
+    const inscripcion = await inscripcionService.getByUsuarioYTorneo(Number(usuarioId), Number(torneoId));
+    res.json({ inscrito: !!inscripcion });
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 app.put(`${paths.base}/${paths.torneos.inscripciones.base}/${paths.torneos.inscripciones.update}`,
   authMiddleware,
