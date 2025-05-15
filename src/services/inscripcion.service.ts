@@ -1,12 +1,21 @@
 import { Usuario_Torneo } from '../models/usuario_torneo.model';
 import { Torneo } from '../models/torneo.model';
 import { Usuario } from '../models/usuario.model';
+
+
 async function getSome(pagina: number): Promise<Usuario_Torneo[]> {
   return await Usuario_Torneo.findAll({
     limit: 15,
-    offset: (pagina - 1) * 15
+    offset: (pagina - 1) * 15,
+    include: [
+      {
+        model: Usuario,
+        attributes: ['id', 'nombre_usuario']  // Aquí pides solo lo necesario
+      }
+    ]
   });
 }
+
 
 async function getOne(id: number): Promise<Usuario_Torneo | null> {
   return await Usuario_Torneo.findByPk(id);
@@ -62,11 +71,20 @@ async function getByUsuarioYTorneo(usuarioId: number, torneoId: number): Promise
   });
 }
 
+async function getAllByTorneo(torneoId: number): Promise<Usuario_Torneo[]> {
+  return await Usuario_Torneo.findAll({
+    where: { torneo_id: torneoId },
+    include: [Usuario], // 👈 Esto trae el nombre_usuario
+  });
+}
+
+
 export default {
   getSome,
   getOne,
   add,
   update,
   delete: delete_,
-  getByUsuarioYTorneo
+  getByUsuarioYTorneo,
+  getAllByTorneo
 } as const;

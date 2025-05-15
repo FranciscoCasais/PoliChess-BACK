@@ -79,7 +79,7 @@ app.get(`${paths.base}/${paths.usuarios.base}/${paths.usuarios.getSomeByElo}`,
 
 app.post(`${paths.base}/${paths.usuarios.base}/${paths.usuarios.add}`,
   (req: Request, res: Response, next: NextFunction) => {
-  const usuario = req.body;
+  const usuario = req.body; console.log(usuario);
   usuarioService.add(usuario)
     .then(data => res.json(data))
     .catch(next);
@@ -114,18 +114,38 @@ app.delete(`${paths.base}/${paths.usuarios.base}/${paths.usuarios.delete}`,
     .catch(next);
 });
 
-app.get(`${paths.base}/${paths.torneos.base}/${paths.torneos.getOne}`,
-  (req: Request, res: Response, next: NextFunction) => {
-  const { id } = req.params;
-  torneoService.getOne(Number(id))
-    .then(data => res.json(data))
-    .catch(next);
+app.get(`${paths.base}/${paths.torneos.base}/:torneoId/${paths.torneos.inscripciones.base}/pagina/:pagina`,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const torneoId = Number(req.params.torneoId);
+      const pagina = Number(req.params.pagina);
+
+      const inscripciones = await Usuario_Torneo.findAll({
+        where: { torneo_id: torneoId }, // ✅ Filtra bien
+        include: [{ model: Usuario, attributes: ['nombre_usuario'] }],
+        limit: 20,
+        offset: (pagina - 1) * 20,
+      });
+
+      res.json(inscripciones);
+    } catch (err) {
+      console.error("🔴 Error al obtener inscripciones:", err);
+      next(err);
+    }
 });
+
 
 app.get(`${paths.base}/${paths.torneos.base}/${paths.torneos.getSome}`,
   (req: Request, res: Response, next: NextFunction) => {
   const { pagina } = req.params;
   torneoService.getSome(Number(pagina))
+    .then(data => res.json(data))
+    .catch(next);
+});
+app.get(`${paths.base}/${paths.torneos.base}/${paths.torneos.getOne}`,
+  (req: Request, res: Response, next: NextFunction) => {
+  const { id } = req.params;
+  torneoService.getOne(Number(id))
     .then(data => res.json(data))
     .catch(next);
 });
@@ -199,19 +219,28 @@ app.get(`${paths.base}/${paths.torneos.inscripciones.base}/${paths.torneos.inscr
     .catch(next);
 });
 
-app.get(`${paths.base}/${paths.torneos.base}/${paths.torneos.getOne}/${paths.torneos.inscripciones.base}/${paths.torneos.inscripciones.getSome}`,
-  (req: Request, res: Response, next: NextFunction) => {
-  const { pagina } = req.params;
-  inscripcionService.getSome(Number(pagina))
-    .then(data => res.json(data))
-    .catch(next);
+app.get(`${paths.base}/${paths.torneos.base}/:torneoId/${paths.torneos.inscripciones.base}/pagina/:pagina`,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      /* const torneoId = Number(req.params.torneoId);
+      const pagina = Number(req.params.pagina);*/
+      const { torneoId, pagina} = req.params;
+    console.log("DANIELSANTI CREMOSOSOAFOASKFNASF" + torneoId,pagina);
+      const inscripciones = await Usuario_Torneo.findAll({
+        where: { torneo_id: Number(torneoId) }, // ✅ Filtra por el torneo actual
+        include: [{ model: Usuario, attributes: ['nombre_usuario'] }],
+        limit: 20,
+        offset: (Number(pagina) - 1) * 20,
+      });
+
+      res.json(inscripciones);
+    } catch (err) {
+      console.error("Error buscando inscripciones:", err);
+      next(err);
+    }
 });
-app.post('/inscripciones', authMiddleware, (req, res, next) => {
-  const inscripcion = req.body;
-  inscripcionService.add(inscripcion)
-    .then(data => res.json(data))
-    .catch(next);
-});
+
+
 
 
 app.post(`${paths.base}/${paths.torneos.inscripciones.base}/${paths.torneos.inscripciones.add}`,
@@ -233,6 +262,17 @@ app.get(`${paths.base}/inscripciones/torneo/:torneoId/usuario/:usuarioId`, authM
     next(error);
   }
 });
+app.get('/polichess/torneos/:id/inscripciones', async (req, res, next) => {
+  const torneoId = Number(req.params.id);
+  try {
+    const inscripciones = await inscripcionService.getAllByTorneo(torneoId);
+    res.json(inscripciones);
+  } catch (err) {
+    next(err);
+  }
+});
+
+
 
 
 app.put(`${paths.base}/${paths.torneos.inscripciones.base}/${paths.torneos.inscripciones.update}`,
